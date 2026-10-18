@@ -26,18 +26,37 @@ if exist "%VENV_PYTHON%" (
     )
 )
 
+if /I "%PYTHON_EXE%"=="py -3" (
+    py -3 -c "import sys; raise SystemExit(sys.version_info < (3, 10))"
+) else (
+    "%PYTHON_EXE%" -c "import sys; raise SystemExit(sys.version_info < (3, 10))"
+)
+if errorlevel 1 (
+    echo PDF Manager requires Python 3.10 or newer.
+    pause
+    exit /b 1
+)
+
 if exist "%REQ_PATH%" (
-    echo Installation des dépendances... 
     if /I "%PYTHON_EXE%"=="py -3" (
-        py -3 -m pip install -r "%REQ_PATH%"
+        py -3 -c "import importlib.util, sys; sys.exit(not all(importlib.util.find_spec(module) for module in ('pypdf', 'pymupdf', 'tkinterdnd2', 'PIL')))"
     ) else (
-        "%PYTHON_EXE%" -m pip install -r "%REQ_PATH%"
+        "%PYTHON_EXE%" -c "import importlib.util, sys; sys.exit(not all(importlib.util.find_spec(module) for module in ('pypdf', 'pymupdf', 'tkinterdnd2', 'PIL')))"
     )
 
     if errorlevel 1 (
-        echo Echec de l'installation des dependances.
-        pause
-        exit /b %errorlevel%
+        echo Installation des dependances manquantes...
+        if /I "%PYTHON_EXE%"=="py -3" (
+            py -3 -m pip install -r "%REQ_PATH%"
+        ) else (
+            "%PYTHON_EXE%" -m pip install -r "%REQ_PATH%"
+        )
+
+        if errorlevel 1 (
+            echo Echec de l'installation des dependances.
+            pause
+            exit /b %errorlevel%
+        )
     )
 )
 

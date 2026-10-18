@@ -47,6 +47,9 @@ python -m pytest -q
 
 ## Project layout
 
+- `pdf_manager.py`: application entry point and main-window orchestration.
+- `pdf_manager_ui/`: UI behavior grouped by merge, split, compression, and preview.
 - `assets/icons/`: application icon source files.
 - `scripts/`: standalone build and release packaging scripts.
+- `tests/`: application and PDF-service tests.
 - `pdf_manager_version.py`: displayed application version.

@@ -6,24 +6,42 @@
 $ErrorActionPreference = 'Stop'
 
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$pythonExe = "$env:LOCALAPPDATA\Programs\Python\Python310\python.exe"
+$venvPython = Join-Path $scriptDir '..\.venv\Scripts\python.exe'
 $requirementsFile = Join-Path $scriptDir 'requirements.txt'
 $appFile = Join-Path $scriptDir 'pdf_manager.py'
+$pythonArgs = @()
 
-if (-not (Test-Path $pythonExe)) {
-    Write-Host "Python 3.10 introuvable dans le dossier standard Windows." -ForegroundColor Yellow
-    Write-Host "Vérifiez que Python est installé, puis relancez ce script." -ForegroundColor Yellow
+if (Test-Path $venvPython) {
+    $pythonExe = $venvPython
+} elseif (Get-Command py -ErrorAction SilentlyContinue) {
+    $pythonExe = (Get-Command py).Source
+    $pythonArgs = @('-3')
+} elseif (Get-Command python -ErrorAction SilentlyContinue) {
+    $pythonExe = (Get-Command python).Source
+} else {
+    Write-Host "Python 3.10 ou supérieur est introuvable." -ForegroundColor Yellow
+    Write-Host "Installez Python, puis relancez ce script." -ForegroundColor Yellow
     Read-Host "Appuyez sur Entrée pour quitter"
     exit 1
 }
 
+& $pythonExe @pythonArgs -c "import sys; raise SystemExit(sys.version_info < (3, 10))"
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "PDF Manager nécessite Python 3.10 ou supérieur." -ForegroundColor Red
+    Read-Host "Appuyez sur Entrée pour quitter"
+    exit $LASTEXITCODE
+}
+
 if (Test-Path $requirementsFile) {
-    Write-Host "Installation des dépendances..." -ForegroundColor Cyan
-    & $pythonExe -m pip install -r $requirementsFile
+    & $pythonExe @pythonArgs -c "import importlib.util, sys; sys.exit(not all(importlib.util.find_spec(module) for module in ('pypdf', 'pymupdf', 'tkinterdnd2', 'PIL')))"
     if ($LASTEXITCODE -ne 0) {
-        Write-Host "L'installation des dépendances a échoué." -ForegroundColor Red
-        Read-Host "Appuyez sur Entrée pour quitter"
-        exit $LASTEXITCODE
+        Write-Host "Installation des dépendances manquantes..." -ForegroundColor Cyan
+        & $pythonExe @pythonArgs -m pip install -r $requirementsFile
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "L'installation des dépendances a échoué." -ForegroundColor Red
+            Read-Host "Appuyez sur Entrée pour quitter"
+            exit $LASTEXITCODE
+        }
     }
 }
 
@@ -33,6 +51,7 @@ if (-not (Test-Path $appFile)) {
     exit 1
 }
 
+Set-Location $scriptDir
 Write-Host "Lancement de PDF Manager by GaLlaKk..." -ForegroundColor Green
-& $pythonExe $appFile
+& $pythonExe @pythonArgs $appFile
 exit $LASTEXITCODE
