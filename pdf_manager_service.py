@@ -58,7 +58,7 @@ def split_pdf_pages(pdf_file, output_dir=None):
         raise
 
 
-def merge_pdfs(pdf_files, output_path):
+def merge_pdfs(pdf_files, output_path, page_rotations=None):
     """Merge PDF files in the order they were selected.
 
     Fusionne plusieurs fichiers PDF dans l'ordre de sélection.
@@ -76,11 +76,68 @@ def merge_pdfs(pdf_files, output_path):
         for pdf_file in pdf_files:
             if not os.path.isfile(pdf_file):
                 raise FileNotFoundError(f"Fichier introuvable : {pdf_file}")
+            first_page_index = len(writer.pages)
             writer.append(pdf_file)
+            _apply_page_rotations(
+                writer,
+                first_page_index,
+                (page_rotations or {}).get(pdf_file, {}),
+            )
 
         writer.write(output_path)
     finally:
         writer.close()
+
+
+def _apply_page_rotations(writer, first_page_index, page_rotations):
+    """Apply preview rotation deltas to pages in a PDF writer."""
+    for page_index, rotation in page_rotations.items():
+        if not isinstance(page_index, int) or isinstance(page_index, bool) or page_index < 0:
+            raise ValueError(f"Invalid PDF page index: {page_index}")
+        if page_index >= len(writer.pages) - first_page_index:
+            raise ValueError(f"PDF page index out of range: {page_index}")
+        if not isinstance(rotation, int) or isinstance(rotation, bool) or rotation not in {0, 90, 180, 270}:
+            raise ValueError(f"Invalid page rotation: {rotation}")
+        if rotation:
+            writer.pages[first_page_index + page_index].rotate(rotation)
+
+
+def rotate_pdf_pages(pdf_file, output_path, page_rotations):
+    """Save a rotated copy of a PDF without modifying the source file."""
+    if not is_pdf_file(pdf_file):
+        raise ValueError(f"The PDF file is missing or invalid: {pdf_file}")
+    if not isinstance(output_path, str) or not output_path.lower().endswith(".pdf"):
+        raise ValueError("The output path must have a .pdf extension.")
+
+    input_path = os.path.abspath(pdf_file)
+    destination_path = os.path.abspath(output_path)
+    if os.path.normcase(input_path) == os.path.normcase(destination_path):
+        raise ValueError("The output file must be different from the source file.")
+
+    output_dir = os.path.dirname(destination_path)
+    os.makedirs(output_dir, exist_ok=True)
+    temporary_fd, temporary_path = tempfile.mkstemp(
+        prefix=".pdf-rotate-",
+        suffix=".pdf",
+        dir=output_dir,
+    )
+    os.close(temporary_fd)
+
+    writer = PdfWriter()
+    try:
+        writer.append(input_path)
+        _apply_page_rotations(writer, 0, page_rotations)
+        with open(temporary_path, "wb") as output_file:
+            writer.write(output_file)
+        os.replace(temporary_path, destination_path)
+    finally:
+        try:
+            writer.close()
+        finally:
+            if os.path.exists(temporary_path):
+                os.remove(temporary_path)
+
+    return destination_path
 
 
 def compress_pdf(pdf_file, output_path, mode="lossless"):

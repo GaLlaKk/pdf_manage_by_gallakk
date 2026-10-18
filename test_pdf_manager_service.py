@@ -9,7 +9,7 @@ import pymupdf
 import pytest
 from pypdf import PdfWriter
 
-from pdf_manager_service import compress_pdf, split_pdf_pages
+from pdf_manager_service import compress_pdf, merge_pdfs, rotate_pdf_pages, split_pdf_pages
 from pdf_manager_translations import LANG_ORDER, TRANSLATIONS
 
 
@@ -123,6 +123,40 @@ def test_compress_pdf_rejects_unknown_mode(tmp_path):
 
     with pytest.raises(ValueError, match="Unsupported compression mode"):
         compress_pdf(str(source), str(tmp_path / "output.pdf"), mode="unknown")
+
+
+def test_rotate_pdf_pages_saves_rotated_copy_without_changing_source(tmp_path):
+    """Rotate selected pages while keeping the original PDF untouched."""
+    source = tmp_path / "source.pdf"
+    _create_pdf(source, 2)
+    original_bytes = source.read_bytes()
+    output = tmp_path / "rotated.pdf"
+
+    assert rotate_pdf_pages(str(source), str(output), {0: 90}) == str(output)
+    assert source.read_bytes() == original_bytes
+    with pymupdf.open(output) as document:
+        assert document.page_count == 2
+        assert document[0].rotation == 90
+        assert document[1].rotation == 0
+
+
+def test_merge_pdfs_applies_preview_rotations(tmp_path):
+    """Apply page-specific preview rotations when merging PDFs."""
+    first_source = tmp_path / "first.pdf"
+    second_source = tmp_path / "second.pdf"
+    _create_pdf(first_source, 1)
+    _create_pdf(second_source, 2)
+    output = tmp_path / "merged.pdf"
+
+    merge_pdfs(
+        [str(first_source), str(second_source)],
+        str(output),
+        page_rotations={str(second_source): {1: 270}},
+    )
+
+    with pymupdf.open(output) as document:
+        assert document.page_count == 3
+        assert [page.rotation for page in document] == [0, 0, 270]
 
 
 def test_all_languages_have_matching_translation_keys_and_placeholders():

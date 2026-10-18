@@ -16,9 +16,9 @@ import pymupdf
 from tkinterdnd2 import DND_FILES, TkinterDnD
 
 try:
-    from ..pdf_manager_service import compress_pdf, merge_pdfs, split_pdf_pages
+    from ..pdf_manager_service import compress_pdf, merge_pdfs, rotate_pdf_pages, split_pdf_pages
 except ImportError:
-    from pdf_manager_service import compress_pdf, merge_pdfs, split_pdf_pages
+    from pdf_manager_service import compress_pdf, merge_pdfs, rotate_pdf_pages, split_pdf_pages
 
 
 try:
@@ -63,6 +63,7 @@ class PdfManagerApp:
         self.root.minsize(860, 430)
 
         self.selected_files = []
+        self.page_rotations = {}
         self.current_index = 0
         self.preview_page_index = 0
         self._busy = False
@@ -220,6 +221,9 @@ class PdfManagerApp:
         self.up_button.config(text=self.t("move_up"))
         self.down_button.config(text=self.t("move_down"))
         self.preview_title_label.config(text=self.t("preview_title"))
+        self.rotate_left_button.config(text=self.t("rotate_left"))
+        self.rotate_right_button.config(text=self.t("rotate_right"))
+        self.save_rotated_button.config(text=self.t("save_rotated"))
         self.output_label.config(text=self.t("output_file_label"))
         self.choose_output_button.config(text=self.t("choose"))
         self.merge_button.config(text=self.t("merge"))
@@ -324,6 +328,30 @@ class PdfManagerApp:
 
         self.next_page_button = tk.Button(self.preview_nav, text="→", width=5, command=self.next_preview_page, state=tk.DISABLED)
         self.next_page_button.pack(side="right")
+
+        rotation_frame = tk.Frame(right_frame)
+        rotation_frame.pack(fill="x", pady=(0, 6))
+        self.rotate_left_button = tk.Button(
+            rotation_frame,
+            text=self.t("rotate_left"),
+            command=lambda: self.rotate_current_page(-90),
+            state=tk.DISABLED,
+        )
+        self.rotate_left_button.pack(side="left", expand=True, fill="x", padx=(0, 3))
+        self.rotate_right_button = tk.Button(
+            rotation_frame,
+            text=self.t("rotate_right"),
+            command=lambda: self.rotate_current_page(90),
+            state=tk.DISABLED,
+        )
+        self.rotate_right_button.pack(side="left", expand=True, fill="x", padx=(3, 0))
+        self.save_rotated_button = tk.Button(
+            right_frame,
+            text=self.t("save_rotated"),
+            command=self.save_rotated_copy,
+            state=tk.DISABLED,
+        )
+        self.save_rotated_button.pack(fill="x", pady=(0, 6))
 
         self.preview_label = tk.Label(
             right_frame,
@@ -802,6 +830,68 @@ class PdfManagerApp:
         except Exception:
             return 0
 
+    def rotate_current_page(self, degrees):
+        """Rotate the page currently shown in the preview."""
+        if not self.selected_files:
+            return
+
+        pdf_path = self.selected_files[self.current_index]
+        rotations = self.page_rotations.setdefault(pdf_path, {})
+        page_rotation = (rotations.get(self.preview_page_index, 0) + degrees) % 360
+        if page_rotation:
+            rotations[self.preview_page_index] = page_rotation
+        else:
+            del rotations[self.preview_page_index]
+        if not rotations:
+            del self.page_rotations[pdf_path]
+
+        self.refresh_rotation_controls()
+        self.update_preview()
+
+    def refresh_rotation_controls(self, has_page=True):
+        """Enable rotation and save controls for the current file."""
+        state = tk.NORMAL if self.selected_files and has_page else tk.DISABLED
+        self.rotate_left_button.config(state=state)
+        self.rotate_right_button.config(state=state)
+        has_rotations = bool(
+            self.selected_files
+            and self.page_rotations.get(self.selected_files[self.current_index])
+        )
+        self.save_rotated_button.config(state=tk.NORMAL if has_rotations else tk.DISABLED)
+
+    def save_rotated_copy(self):
+        """Save a separate copy of the selected PDF with its preview rotations."""
+        if not self.selected_files:
+            return
+        pdf_path = self.selected_files[self.current_index]
+        rotations = dict(self.page_rotations.get(pdf_path, {}))
+        if not rotations:
+            return
+
+        base_name, extension = os.path.splitext(os.path.basename(pdf_path))
+        output_path = filedialog.asksaveasfilename(
+            title=self.t("save_rotated_dialog"),
+            initialdir=os.path.dirname(pdf_path),
+            initialfile=f"{base_name}_rotated{extension}",
+            defaultextension=".pdf",
+            filetypes=[(self.t("files_filter"), "*.pdf")],
+        )
+        if not output_path:
+            return
+
+        self.run_with_loading(
+            self.t("save_rotated"),
+            lambda: rotate_pdf_pages(pdf_path, output_path, rotations),
+            lambda saved_path: messagebox.showinfo(
+                self.t("rotated_success"),
+                self.t("rotated_success_details", path=saved_path),
+            ),
+            lambda error: messagebox.showerror(
+                self.t("app_error"),
+                self.t("rotated_fail", error=error),
+            ),
+        )
+
     def render_pdf_thumbnail(self, pdf_path, page_number=0):
         """Render a PDF thumbnail in a worker thread."""
         with pymupdf.open(pdf_path) as document:
@@ -810,6 +900,8 @@ class PdfManagerApp:
                 return page_count, None
             page_index = max(0, min(int(page_number), page_count - 1))
             page = document[page_index]
+            page_rotation = self.page_rotations.get(pdf_path, {}).get(page_index, 0)
+            page.set_rotation((page.rotation + page_rotation) % 360)
             pix = page.get_pixmap(matrix=pymupdf.Matrix(1.8, 1.8), alpha=False)
 
         with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as temp_file:
@@ -822,6 +914,9 @@ class PdfManagerApp:
         return page_count, temp_path
 
     def set_preview_unavailable(self, pdf_path):
+        self.prev_page_button.config(state=tk.DISABLED)
+        self.next_page_button.config(state=tk.DISABLED)
+        self.refresh_rotation_controls(has_page=False)
         self.preview_label.config(
             text=self.t("preview_unavailable", name=os.path.basename(pdf_path)),
             image="",
@@ -838,12 +933,14 @@ class PdfManagerApp:
             self.preview_page_var.set(self.t("page_label", current=1, total=1))
             self.prev_page_button.config(state=tk.DISABLED)
             self.next_page_button.config(state=tk.DISABLED)
+            self.refresh_rotation_controls(has_page=False)
             self.set_preview_unavailable(pdf_path)
             return
 
         if self.preview_page_index >= page_count:
             self.preview_page_index = page_count - 1
 
+        self.refresh_rotation_controls()
         self.preview_page_var.set(self.t("page_label", current=self.preview_page_index + 1, total=page_count))
         self.prev_page_button.config(
             state=tk.NORMAL if page_count > 1 and self.preview_page_index > 0 else tk.DISABLED
@@ -913,6 +1010,7 @@ class PdfManagerApp:
             self.preview_page_var.set(self.t("page_label", current=1, total=1))
             self.prev_page_button.config(state=tk.DISABLED)
             self.next_page_button.config(state=tk.DISABLED)
+            self.refresh_rotation_controls(has_page=False)
             self.preview_label.config(text=self.t("no_pdf_selected_preview"), image="")
             self.preview_label.image = None
             return
@@ -1078,9 +1176,13 @@ class PdfManagerApp:
             output_path += ".pdf"
 
         pdf_files = list(self.selected_files)
+        page_rotations = {
+            pdf_path: dict(rotations)
+            for pdf_path, rotations in self.page_rotations.items()
+        }
 
         def merge():
-            merge_pdfs(pdf_files, output_path)
+            merge_pdfs(pdf_files, output_path, page_rotations=page_rotations)
 
         def merge_complete(_result):
             messagebox.showinfo(
