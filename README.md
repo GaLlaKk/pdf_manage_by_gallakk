@@ -1,41 +1,52 @@
 # PDF Manager by GaLlaKk
 
-A lightweight, efficient Python utility designed to simplify PDF file operations, including merging, splitting, compressing, and extracting pages.
+A Python desktop application for merging, splitting, compressing, rotating, and reordering PDF pages.
 
----
+## Features
 
-## 🛠️ Features
+- Merge multiple PDFs into one document.
+- Split a PDF into individual pages.
+- Compress PDFs in lossless or balanced mode.
+- Rotate and reorder pages before saving.
+- Display progress while long-running operations are in progress.
 
-- **Merge PDFs**: Combine multiple PDF files into a single document seamlessly.
-- **Split & Extract**: Extract specific pages or split large PDFs into individual files.
-- **PDF Compression**: Reduce PDF file sizes while maintaining reasonable document quality.
-- **Loading feedback**: See an animated progress window while PDFs are loaded, merged, split, or compressed.
-- **Page Operations**: Rotate or reorder pages inside your PDF files.
-
----
-
-## 🚀 Getting Started
-
-### Downloads
+## Downloads
 
 For each version released with a `v*` tag, GitHub Actions builds standalone packages for Windows, Linux, and macOS. Download the package for your system from the **Assets** section of that version's [GitHub Releases](https://github.com/GaLlaKk/pdf_manage_by_gallakk/releases) page; Python does not need to be installed.
 
-The application icon is included in the Windows executable and macOS app bundle, and is also used in the application window, loading dialog, and taskbar.
+The application version is displayed in the window title. The application icon is included in the Windows executable and macOS app bundle, and is also used in the application window, loading dialog, and taskbar.
 
 On macOS, the first launch may require approval in **System Settings → Privacy & Security**, because the application is not signed or notarized. Linux packages target the architecture shown in the package name and require a graphical desktop with Tk support.
 
-To publish a release, push a version tag, for example:
+## Versioning and releases
+
+`pdf_manager_version.py` is the single source of the application's displayed version. Update `__version__` there for a release, then create and push a matching `v`-prefixed Git tag. For example, for version `1.0.0`:
 
 ```bash
 git tag v1.0.0
 git push origin v1.0.0
 ```
 
-The same workflow can also be started manually from the repository's **Actions** tab; manual builds are available as workflow artifacts.
+The same workflow can be started manually from the repository's **Actions** tab; those builds are available as workflow artifacts.
 
-### Running from source
+## Running from source
 
-The standalone downloads above do not require Python. To run the source code directly, install Python 3.10 or higher and the dependencies, including Pillow for the application icon:
+Install Python 3.10 or higher and the application dependencies, then launch the app:
 
 ```bash
-python --version
+python -m pip install -r requirements.txt
+python pdf_manager.py
+```
+
+To run the tests:
+
+```bash
+python -m pip install -r requirements-build.txt
+python -m pytest -q
+```
+
+## Project layout
+
+- `assets/icons/`: application icon source files.
+- `scripts/`: standalone build and release packaging scripts.
+- `pdf_manager_version.py`: displayed application version.

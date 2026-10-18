@@ -17,6 +17,8 @@ import pymupdf
 from PIL import Image, ImageTk
 from tkinterdnd2 import DND_FILES, TkinterDnD
 
+from pdf_manager_version import __version__
+
 try:
     from ..pdf_manager_service import compress_pdf, merge_pdfs, rotate_pdf_pages, split_pdf_pages
 except ImportError:
@@ -67,7 +69,9 @@ class PdfManagerApp:
         self._windows_icon_handles = []
         self.icon_path = resource_path("PDFManager.ico")
         if not os.path.isfile(self.icon_path):
-            self.icon_path = resource_path("pdf_manager_logo_256x256.ico")
+            self.icon_path = resource_path(
+                os.path.join("assets", "icons", "pdf_manager_logo_256x256.ico")
+            )
         with Image.open(self.icon_path) as icon:
             largest_frame = max(
                 range(getattr(icon, "n_frames", 1)),
@@ -81,7 +85,7 @@ class PdfManagerApp:
             self.root.iconbitmap(default=self.icon_path)
         self.current_lang = detect_system_language()
         self.translations = TRANSLATIONS
-        self.root.title(self.t("app_title"))
+        self.root.title(self.window_title())
         self.root.geometry("1030x560")
         self.root.minsize(860, 430)
         if os.name == "nt":
@@ -191,6 +195,9 @@ class PdfManagerApp:
         except Exception:
             return text
 
+    def window_title(self):
+        return f"{self.t('app_title')} v{__version__}"
+
     def close_application(self):
         """Close the application and clean up the current preview image."""
         self._closing = True
@@ -209,7 +216,7 @@ class PdfManagerApp:
         window.iconphoto(True, self.app_icon)
         if os.name == "nt":
             window.iconbitmap(self.icon_path)
-        window.title(self.t("app_title"))
+        window.title(self.window_title())
         window.transient(self.root)
         window.resizable(False, False)
         window.protocol("WM_DELETE_WINDOW", lambda: None)
@@ -283,7 +290,7 @@ class PdfManagerApp:
 
         Actualise les textes visibles après un changement de langue.
         """
-        self.root.title(self.t("app_title"))
+        self.root.title(self.window_title())
         self.language_label.config(text=self.t("language"))
         self.notebook.tab(0, text=self.t("merge_tab"))
         self.notebook.tab(1, text=self.t("split_tab"))

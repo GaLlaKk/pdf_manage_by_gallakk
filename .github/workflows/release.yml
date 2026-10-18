@@ -36,7 +36,7 @@ jobs:
         run: python -m pip install -r requirements-build.txt
 
       - name: Run tests
-        run: python -m pytest -q test_pdf_manager_service.py
+        run: python -m pytest -q
 
       - name: Build standalone application
         run: python scripts/build_application.py

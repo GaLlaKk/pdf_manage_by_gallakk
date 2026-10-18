@@ -9,7 +9,8 @@ from PyInstaller.__main__ import run
 
 
 ROOT = Path(__file__).resolve().parent.parent
-SOURCE_ICON = ROOT / "pdf_manager_logo_256x256.ico"
+ICON_ASSET_DIRECTORY = ROOT / "assets" / "icons"
+SOURCE_ICON = ICON_ASSET_DIRECTORY / "pdf_manager_logo_256x256.ico"
 ICON_SIZES = (16, 32, 48, 64, 128, 256)
 ICON_DIRECTORY = ROOT / ".build_icons"
 
@@ -31,7 +32,7 @@ def icon_size(icon, frame):
 
 
 def load_icon(size):
-    icon_path = ROOT / f"pdf_manager_logo_{size}x{size}.ico"
+    icon_path = ICON_ASSET_DIRECTORY / f"pdf_manager_logo_{size}x{size}.ico"
     if icon_path.is_file():
         return largest_icon_frame(icon_path)
     with largest_icon_frame(SOURCE_ICON) as source_image:
@@ -45,7 +46,7 @@ def create_windows_icon():
     offset = 6 + 16 * len(ICON_SIZES)
 
     for size in ICON_SIZES:
-        source_path = ROOT / f"pdf_manager_logo_{size}x{size}.ico"
+        source_path = ICON_ASSET_DIRECTORY / f"pdf_manager_logo_{size}x{size}.ico"
         data = source_path.read_bytes()
         reserved, image_type, count = struct.unpack_from("<HHH", data)
         if reserved != 0 or image_type != 1 or count != 1:
@@ -108,7 +109,7 @@ def main():
         "--icon",
         str(build_icon),
         "--add-data",
-        f"{SOURCE_ICON}{os.pathsep}.",
+        f"{SOURCE_ICON}{os.pathsep}assets/icons",
         "--collect-all",
         "tkinterdnd2",
         "--collect-all",
