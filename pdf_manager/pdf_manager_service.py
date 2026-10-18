@@ -6,7 +6,9 @@
 # ============================================================
 
 import os
+import tempfile
 
+import pymupdf
 from pypdf import PdfReader, PdfWriter
 
 
@@ -79,6 +81,59 @@ def merge_pdfs(pdf_files, output_path):
         writer.write(output_path)
     finally:
         writer.close()
+
+
+def compress_pdf(pdf_file, output_path, mode="lossless"):
+    """Compress a PDF without changing its source file.
+
+    Compresse un PDF sans modifier le fichier source.
+    """
+    if mode not in {"lossless", "balanced"}:
+        raise ValueError(f"Unsupported compression mode: {mode}")
+    if not is_pdf_file(pdf_file):
+        raise ValueError(f"The PDF file is missing or invalid: {pdf_file}")
+    if not isinstance(output_path, str) or not output_path.lower().endswith(".pdf"):
+        raise ValueError("The output path must have a .pdf extension.")
+
+    input_path = os.path.abspath(pdf_file)
+    destination_path = os.path.abspath(output_path)
+    if os.path.normcase(input_path) == os.path.normcase(destination_path):
+        raise ValueError("The output file must be different from the source file.")
+
+    output_dir = os.path.dirname(destination_path)
+    os.makedirs(output_dir, exist_ok=True)
+    temporary_fd, temporary_path = tempfile.mkstemp(
+        prefix=".pdf-compress-",
+        suffix=".pdf",
+        dir=output_dir,
+    )
+    os.close(temporary_fd)
+
+    try:
+        with pymupdf.open(input_path) as document:
+            if mode == "balanced":
+                document.rewrite_images(
+                    dpi_threshold=200,
+                    dpi_target=150,
+                    quality=65,
+                    lossy=True,
+                    lossless=True,
+                    bitonal=False,
+                )
+            document.save(
+                temporary_path,
+                garbage=4,
+                clean=True,
+                deflate=True,
+                deflate_images=True,
+                deflate_fonts=True,
+            )
+        os.replace(temporary_path, destination_path)
+    finally:
+        if os.path.exists(temporary_path):
+            os.remove(temporary_path)
+
+    return destination_path
 
 
 def is_pdf_file(path):

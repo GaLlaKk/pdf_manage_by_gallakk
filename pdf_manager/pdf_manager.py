@@ -11,13 +11,13 @@ import tempfile
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 
-import fitz
+import pymupdf
 from tkinterdnd2 import DND_FILES, TkinterDnD
 
 try:
-    from .pdf_manager_service import merge_pdfs, split_pdf_pages
+    from .pdf_manager_service import compress_pdf, merge_pdfs, split_pdf_pages
 except ImportError:
-    from pdf_manager_service import merge_pdfs, split_pdf_pages
+    from pdf_manager_service import compress_pdf, merge_pdfs, split_pdf_pages
 
 
 try:
@@ -83,18 +83,24 @@ class PdfManagerApp:
 
         self.split_source_var = tk.StringVar(value="")
         self.split_output_dir_var = tk.StringVar(value="")
+        self.compress_source_var = tk.StringVar(value="")
+        self.compress_output_var = tk.StringVar(value="")
+        self.compress_mode_var = tk.StringVar(value="lossless")
 
         self.notebook = ttk.Notebook(root)
         self.notebook.pack(fill="both", expand=True)
 
         self.merge_tab = tk.Frame(self.notebook, padx=10, pady=10)
         self.split_tab = tk.Frame(self.notebook, padx=10, pady=10)
+        self.compress_tab = tk.Frame(self.notebook, padx=10, pady=10)
 
         self.notebook.add(self.merge_tab, text=self.t("merge_tab"))
         self.notebook.add(self.split_tab, text=self.t("split_tab"))
+        self.notebook.add(self.compress_tab, text=self.t("compress_tab"))
 
         self.build_merge_tab()
         self.build_split_tab()
+        self.build_compress_tab()
         self.apply_language()
 
     def t(self, key, **kwargs):
@@ -128,6 +134,7 @@ class PdfManagerApp:
         self.language_label.config(text=self.t("language"))
         self.notebook.tab(0, text=self.t("merge_tab"))
         self.notebook.tab(1, text=self.t("split_tab"))
+        self.notebook.tab(2, text=self.t("compress_tab"))
 
         self.merge_title_label.config(text=self.t("merge_title"))
         self.signature_label.config(text=self.t("signature"))
@@ -149,6 +156,17 @@ class PdfManagerApp:
         self.split_info_label.config(text=self.t("split_help"))
         self.split_button.config(text=self.t("split_button"))
         self.split_status_var.set(self.t("status_no_pdf"))
+
+        self.compress_title_label.config(text=self.t("compress_title"))
+        self.compress_input_label.config(text=self.t("compress_input_label"))
+        self.compress_choose_file_button.config(text=self.t("browse"))
+        self.compress_output_label.config(text=self.t("compress_output_label"))
+        self.compress_choose_output_button.config(text=self.t("choose"))
+        self.compress_mode_label.config(text=self.t("compress_mode_label"))
+        self.compress_lossless_radio.config(text=self.t("compress_lossless"))
+        self.compress_balanced_radio.config(text=self.t("compress_balanced"))
+        self.compress_info_label.config(text=self.t("compress_info"))
+        self.compress_button.config(text=self.t("compress_button"))
 
         self.update_preview()
 
@@ -320,6 +338,162 @@ class PdfManagerApp:
 
         self.split_status_var = tk.StringVar(value=self.t("status_no_pdf"))
         tk.Label(self.split_tab, textvariable=self.split_status_var, fg="#333333", padx=15, pady=5, anchor="w").pack(fill="x")
+
+    def build_compress_tab(self):
+        """Build the PDF compression tab and its quality options.
+
+        Crée l'onglet de compression PDF et ses options de qualité.
+        """
+        self.compress_title_label = tk.Label(
+            self.compress_tab,
+            text=self.t("compress_title"),
+            font=("Segoe UI", 11, "bold"),
+            anchor="w",
+            padx=15,
+            pady=12,
+        )
+        self.compress_title_label.pack(fill="x")
+
+        input_frame = tk.Frame(self.compress_tab, padx=15, pady=5)
+        input_frame.pack(fill="x")
+        self.compress_input_label = tk.Label(input_frame, text=self.t("compress_input_label"), width=16, anchor="w")
+        self.compress_input_label.pack(side="left")
+        self.compress_source_entry = tk.Entry(input_frame, textvariable=self.compress_source_var, width=60)
+        self.compress_source_entry.pack(side="left", fill="x", expand=True, padx=10)
+        self.compress_choose_file_button = ttk.Button(
+            input_frame,
+            text=self.t("browse"),
+            command=self.choose_compress_source,
+        )
+        self.compress_choose_file_button.pack(side="left")
+
+        output_frame = tk.Frame(self.compress_tab, padx=15, pady=5)
+        output_frame.pack(fill="x")
+        self.compress_output_label = tk.Label(output_frame, text=self.t("compress_output_label"), width=16, anchor="w")
+        self.compress_output_label.pack(side="left")
+        self.compress_output_entry = tk.Entry(output_frame, textvariable=self.compress_output_var, width=60)
+        self.compress_output_entry.pack(side="left", fill="x", expand=True, padx=10)
+        self.compress_choose_output_button = ttk.Button(
+            output_frame,
+            text=self.t("choose"),
+            command=self.choose_compress_output,
+        )
+        self.compress_choose_output_button.pack(side="left")
+
+        self.compress_mode_label = tk.Label(
+            self.compress_tab,
+            text=self.t("compress_mode_label"),
+            font=("Segoe UI", 10, "bold"),
+            anchor="w",
+            padx=15,
+            pady=10,
+        )
+        self.compress_mode_label.pack(fill="x")
+        mode_frame = tk.Frame(self.compress_tab, padx=15)
+        mode_frame.pack(fill="x")
+        self.compress_lossless_radio = tk.Radiobutton(
+            mode_frame,
+            text=self.t("compress_lossless"),
+            variable=self.compress_mode_var,
+            value="lossless",
+        )
+        self.compress_lossless_radio.pack(anchor="w")
+        self.compress_balanced_radio = tk.Radiobutton(
+            mode_frame,
+            text=self.t("compress_balanced"),
+            variable=self.compress_mode_var,
+            value="balanced",
+        )
+        self.compress_balanced_radio.pack(anchor="w")
+
+        self.compress_info_label = tk.Label(
+            self.compress_tab,
+            text=self.t("compress_info"),
+            justify="left",
+            wraplength=760,
+            fg="#444444",
+            padx=15,
+            pady=12,
+            anchor="w",
+        )
+        self.compress_info_label.pack(fill="x")
+
+        buttons_frame = tk.Frame(self.compress_tab, padx=15, pady=10)
+        buttons_frame.pack(fill="x")
+        self.compress_button = tk.Button(
+            buttons_frame,
+            text=self.t("compress_button"),
+            command=self.compress_selected_pdf,
+            width=18,
+        )
+        self.compress_button.pack(side="right")
+
+    def choose_compress_source(self):
+        """Select the PDF to compress and suggest a separate output path.
+
+        Sélectionne le PDF à compresser et propose un chemin de sortie distinct.
+        """
+        file_path = filedialog.askopenfilename(
+            title=self.t("compress_choose_file"),
+            filetypes=[(self.t("files_filter"), "*.pdf"), (self.t("all_files"), "*.*")],
+        )
+        if file_path:
+            self.compress_source_var.set(file_path)
+            base_name, extension = os.path.splitext(file_path)
+            self.compress_output_var.set(f"{base_name}_compressed{extension}")
+
+    def choose_compress_output(self):
+        """Choose where to save the compressed PDF.
+
+        Choisit l'emplacement d'enregistrement du PDF compressé.
+        """
+        source_path = self.compress_source_var.get().strip()
+        initial_dir = os.path.dirname(source_path) if source_path else os.getcwd()
+        default_name = os.path.basename(self.compress_output_var.get().strip()) or "compressed.pdf"
+        output_path = filedialog.asksaveasfilename(
+            title=self.t("compress_save_pdf"),
+            initialdir=initial_dir,
+            initialfile=default_name,
+            defaultextension=".pdf",
+            filetypes=[(self.t("files_filter"), "*.pdf")],
+        )
+        if output_path:
+            self.compress_output_var.set(output_path)
+
+    def compress_selected_pdf(self):
+        """Compress the selected PDF and report file sizes or errors.
+
+        Compresse le PDF sélectionné et affiche les tailles ou les erreurs.
+        """
+        source_path = self.compress_source_var.get().strip()
+        if not source_path:
+            messagebox.showwarning(self.t("no_selection"), self.t("compress_select_pdf"))
+            return
+        if not source_path.lower().endswith(".pdf") or not os.path.isfile(source_path):
+            messagebox.showerror(self.t("invalid_pdf"), self.t("not_a_pdf"))
+            return
+
+        output_path = self.compress_output_var.get().strip()
+        if not output_path:
+            base_name, extension = os.path.splitext(source_path)
+            output_path = f"{base_name}_compressed{extension}"
+            self.compress_output_var.set(output_path)
+
+        try:
+            compress_pdf(source_path, output_path, mode=self.compress_mode_var.get())
+            input_size = os.path.getsize(source_path)
+            output_size = os.path.getsize(output_path)
+            messagebox.showinfo(
+                self.t("compress_success"),
+                self.t(
+                    "compress_success_details",
+                    input_size=f"{input_size:,}",
+                    output_size=f"{output_size:,}",
+                    path=output_path,
+                ),
+            )
+        except Exception as exc:
+            messagebox.showerror(self.t("app_error"), self.t("compress_fail", error=exc))
 
     def choose_split_source(self):
         """Open the file picker to select a PDF to split.
@@ -498,7 +672,7 @@ class PdfManagerApp:
         if not pdf_path or not os.path.isfile(pdf_path):
             return 0
         try:
-            with fitz.open(pdf_path) as doc:
+            with pymupdf.open(pdf_path) as doc:
                 return doc.page_count
         except Exception:
             return 0
@@ -512,12 +686,12 @@ class PdfManagerApp:
             return None
 
         try:
-            with fitz.open(pdf_path) as doc:
+            with pymupdf.open(pdf_path) as doc:
                 if doc.page_count == 0:
                     return None
                 page_index = max(0, min(int(page_number), doc.page_count - 1))
                 page = doc[page_index]
-                pix = page.get_pixmap(matrix=fitz.Matrix(1.8, 1.8), alpha=False)
+                pix = page.get_pixmap(matrix=pymupdf.Matrix(1.8, 1.8), alpha=False)
 
                 if self.preview_temp_path and os.path.exists(self.preview_temp_path):
                     os.remove(self.preview_temp_path)
