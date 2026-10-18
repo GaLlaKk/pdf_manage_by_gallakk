@@ -1,3 +1,7 @@
 .vscode/settings.json
 */__pycache__/*
 __*
+build/
+dist/
+artifacts/
+*.spec
