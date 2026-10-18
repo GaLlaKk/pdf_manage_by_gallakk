@@ -39,9 +39,9 @@ if errorlevel 1 (
 
 if exist "%REQ_PATH%" (
     if /I "%PYTHON_EXE%"=="py -3" (
-        py -3 -c "import importlib.util, sys; sys.exit(not all(importlib.util.find_spec(module) for module in ('pypdf', 'pymupdf', 'tkinterdnd2', 'PIL')))"
+        py -3 -c "import importlib.util, sys; sys.exit(not all(importlib.util.find_spec(module) for module in ('pypdf', 'cryptography', 'pymupdf', 'tkinterdnd2', 'PIL')))"
     ) else (
-        "%PYTHON_EXE%" -c "import importlib.util, sys; sys.exit(not all(importlib.util.find_spec(module) for module in ('pypdf', 'pymupdf', 'tkinterdnd2', 'PIL')))"
+        "%PYTHON_EXE%" -c "import importlib.util, sys; sys.exit(not all(importlib.util.find_spec(module) for module in ('pypdf', 'cryptography', 'pymupdf', 'tkinterdnd2', 'PIL')))"
     )
 
     if errorlevel 1 (

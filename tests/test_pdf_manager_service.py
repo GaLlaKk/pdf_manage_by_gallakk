@@ -159,6 +159,23 @@ def test_merge_pdfs_applies_preview_rotations(tmp_path):
         assert [page.rotation for page in document] == [0, 0, 270]
 
 
+def test_merge_pdfs_supports_aes_encrypted_input(tmp_path):
+    """Merge an AES-encrypted PDF with the empty user password."""
+    source = tmp_path / "encrypted.pdf"
+    writer = PdfWriter()
+    writer.add_blank_page(width=100, height=200)
+    writer.encrypt(user_password="", owner_password="owner", algorithm="AES-256")
+    with source.open("wb") as output_file:
+        writer.write(output_file)
+    writer.close()
+
+    output = tmp_path / "merged.pdf"
+    merge_pdfs([str(source)], str(output))
+
+    with pymupdf.open(output) as document:
+        assert document.page_count == 1
+
+
 def test_all_languages_have_matching_translation_keys_and_placeholders():
     """Check every language has complete strings with matching format placeholders.
 

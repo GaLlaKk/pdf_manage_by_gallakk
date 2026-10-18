@@ -1,4 +1,4 @@
-﻿pypdf
+pypdf[crypto]
 PyMuPDF
 tkinterdnd2
 Pillow>=10

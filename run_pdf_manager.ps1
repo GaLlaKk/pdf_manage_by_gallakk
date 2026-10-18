@@ -33,7 +33,7 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 if (Test-Path $requirementsFile) {
-    & $pythonExe @pythonArgs -c "import importlib.util, sys; sys.exit(not all(importlib.util.find_spec(module) for module in ('pypdf', 'pymupdf', 'tkinterdnd2', 'PIL')))"
+    & $pythonExe @pythonArgs -c "import importlib.util, sys; sys.exit(not all(importlib.util.find_spec(module) for module in ('pypdf', 'cryptography', 'pymupdf', 'tkinterdnd2', 'PIL')))"
     if ($LASTEXITCODE -ne 0) {
         Write-Host "Installation des dépendances manquantes..." -ForegroundColor Cyan
         & $pythonExe @pythonArgs -m pip install -r $requirementsFile

@@ -116,6 +116,8 @@ def main():
         "pymupdf",
         "--collect-all",
         "PIL",
+        "--collect-all",
+        "cryptography",
     ]
     if platform.system() == "Windows":
         arguments.extend(
