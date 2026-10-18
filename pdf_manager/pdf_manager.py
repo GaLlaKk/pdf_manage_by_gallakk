@@ -39,7 +39,7 @@ def detect_system_language():
     if not default_locale:
         return "fr"
 
-    short_code = default_locale.lower().split("_")[0]
+    short_code = default_locale.lower().replace("-", "_").split("_")[0]
     return short_code if short_code in TRANSLATIONS else "fr"
 
 

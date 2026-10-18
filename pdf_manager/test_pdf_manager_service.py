@@ -3,12 +3,14 @@
 # Tests de découpage des PDF et de nommage des fichiers générés - GaLlaKk
 # ============================================================
 import os
+import string
 
 import pymupdf
 import pytest
 from pypdf import PdfWriter
 
 from pdf_manager.pdf_manager_service import compress_pdf, split_pdf_pages
+from pdf_manager.pdf_manager_translations import LANG_ORDER, TRANSLATIONS
 
 
 def _create_pdf(path, page_count):
@@ -121,6 +123,31 @@ def test_compress_pdf_rejects_unknown_mode(tmp_path):
 
     with pytest.raises(ValueError, match="Unsupported compression mode"):
         compress_pdf(str(source), str(tmp_path / "output.pdf"), mode="unknown")
+
+
+def test_all_languages_have_matching_translation_keys_and_placeholders():
+    """Check every language has complete strings with matching format placeholders.
+
+    Vérifie que chaque langue contient toutes les chaînes et les mêmes paramètres.
+    """
+    expected_keys = set(TRANSLATIONS["fr"])
+    formatter = string.Formatter()
+
+    assert set(TRANSLATIONS) == set(LANG_ORDER)
+    for language in LANG_ORDER:
+        assert set(TRANSLATIONS[language]) == expected_keys
+        for key in expected_keys:
+            expected_fields = {
+                field_name
+                for _, field_name, _, _ in formatter.parse(TRANSLATIONS["fr"][key])
+                if field_name
+            }
+            actual_fields = {
+                field_name
+                for _, field_name, _, _ in formatter.parse(TRANSLATIONS[language][key])
+                if field_name
+            }
+            assert actual_fields == expected_fields, f"{language}.{key}"
 
 
 def test_split_pdf_pages_names_for_double_digit_count(tmp_path):
