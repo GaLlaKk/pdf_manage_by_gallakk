@@ -1,5 +1,7 @@
 # ============================================================
+# PDF processing service - GaLlaKk
 # Service métier PDF - GaLlaKk
+# PDF merging, splitting, and validation logic
 # Logique de fusion, découpe et validation des fichiers PDF
 # ============================================================
 
@@ -9,7 +11,10 @@ from pypdf import PdfReader, PdfWriter
 
 
 def _format_page_number(page_number, total_pages):
-    """Calcule le format de numérotation selon le nombre total de pages."""
+    """Format a page number based on the total number of pages.
+
+    Calcule le format de numérotation selon le nombre total de pages.
+    """
     if total_pages <= 0:
         return str(page_number)
     width = len(str(total_pages))
@@ -17,7 +22,10 @@ def _format_page_number(page_number, total_pages):
 
 
 def split_pdf_pages(pdf_file, output_dir=None):
-    """Découpe un PDF en un fichier par page avec un nom de type {nomfichier}_{numero}.pdf."""
+    """Split a PDF into one file per page, named {filename}_{number}.pdf.
+
+    Découpe un PDF en un fichier par page avec un nom de type {nomfichier}_{numero}.pdf.
+    """
     if not is_pdf_file(pdf_file):
         raise ValueError(f"Le fichier PDF est introuvable ou invalide : {pdf_file}")
 
@@ -49,7 +57,10 @@ def split_pdf_pages(pdf_file, output_dir=None):
 
 
 def merge_pdfs(pdf_files, output_path):
-    """Fusionne plusieurs fichiers PDF dans l'ordre de sélection."""
+    """Merge PDF files in the order they were selected.
+
+    Fusionne plusieurs fichiers PDF dans l'ordre de sélection.
+    """
     if not pdf_files:
         raise ValueError("Aucun fichier PDF sélectionné.")
 
@@ -71,5 +82,8 @@ def merge_pdfs(pdf_files, output_path):
 
 
 def is_pdf_file(path):
-    """Retourne True si le chemin correspond à un fichier PDF."""
+    """Return whether the path points to an existing PDF file.
+
+    Retourne True si le chemin correspond à un fichier PDF.
+    """
     return isinstance(path, str) and path.lower().endswith(".pdf") and os.path.isfile(path)

@@ -1,6 +1,8 @@
 ﻿# ============================================================
+# PDF merging and splitting - GaLlaKk
 # Fusion et division de PDF - GaLlaKk
-# Application de gestion de fichiers PDF via interface Tkinter
+# PDF file management application using Tkinter
+# Application de gestion de fichiers PDF avec Tkinter
 # ============================================================
 
 import locale
@@ -18,292 +20,17 @@ except ImportError:
     from pdf_manager_service import merge_pdfs, split_pdf_pages
 
 
-LANG_ORDER = ["fr", "en", "de", "es", "pt"]
-TRANSLATIONS = {
-    "fr": {
-        "label": "Français",
-        "app_title": "PDF Manager by GaLlaKk",
-        "language": "Langue",
-        "merge_tab": "Fusionner",
-        "split_tab": "Diviser",
-        "merge_title": "Sélectionnez les fichiers PDF à fusionner :",
-        "signature": "GaLlaKk",
-        "open_pdf": "Ouvrir PDF",
-        "add_folder": "Ajouter un dossier",
-        "remove_selection": "Retirer la sélection",
-        "move_up": "Monter",
-        "move_down": "Descendre",
-        "merge": "Fusionner",
-        "drop_files_hint": "Glissez ici vos fichiers PDF",
-        "preview_title": "Aperçu du PDF",
-        "output_file_label": "Fichier de sortie :",
-        "choose": "Choisir",
-        "split_title": "Sélectionnez un PDF à découper :",
-        "pdf_file_label": "Fichier PDF :",
-        "browse": "Parcourir",
-        "output_dir_label": "Dossier de sortie :",
-        "split_help": "Le nom des fichiers générés sera de la forme : nomfichier_1.pdf, nomfichier_02.pdf, nomfichier_123.pdf selon le nombre total de pages.",
-        "split_button": "Diviser",
-        "status_no_pdf": "Aucun PDF sélectionné.",
-        "status_selected_pdf": "PDF sélectionné : {name}",
-        "status_generated": "{count} fichiers générés dans : {path}",
-        "page_label": "Page {current} / {total}",
-        "no_pdf_selected_preview": "Aucun PDF sélectionné\nAjoutez un fichier pour voir l'aperçu",
-        "preview_unavailable": "Prévisualisation indisponible\n{name}",
-        "preview_not_available": "Aperçu non disponible\n{name}",
-        "drop_pdf_only": "Glissez uniquement des fichiers PDF.",
-        "pdf_required": "PDF requis",
-        "pdf_valid_required": "Veuillez déposer un fichier PDF valide.",
-        "invalid_pdf": "Fichier invalide",
-        "not_a_pdf": "Le fichier sélectionné n'est pas un PDF.",
-        "select_pdf": "Sélectionner le PDF à découper",
-        "save_merge": "Enregistrer le PDF fusionné",
-        "no_selection": "Aucune sélection",
-        "select_a_pdf": "Veuillez sélectionner au moins un fichier PDF.",
-        "select_folder_title": "Sélectionner un dossier contenant des PDF",
-        "choose_output_dir": "Choisir le dossier de destination",
-        "split_success": "Découpage réussi",
-        "split_success_details": "{count} fichiers PDF individuels ont été créés dans :\n{path}",
-        "success_merge": "Fusion réussie",
-        "merge_success_details": "Le fichier PDF a bien été créé :\n{path}",
-        "merge_fail": "La fusion a échoué :\n{error}",
-        "split_fail": "Le découpage a échoué :\n{error}",
-        "app_error": "Erreur",
-        "select_pdf_to_split": "Veuillez sélectionner un fichier PDF à diviser.",
-        "files_filter": "Fichiers PDF",
-        "all_files": "Tous les fichiers",
-        "select_pdf_files": "Sélectionner les fichiers PDF",
-        "select_pdf_to_merge": "Veuillez sélectionner au moins un fichier PDF.",
-        "select_split_pdf": "Veuillez sélectionner un fichier PDF à diviser.",
-    },
-    "en": {
-        "label": "English",
-        "app_title": "PDF Manager by GaLlaKk",
-        "language": "Language",
-        "merge_tab": "Merge",
-        "split_tab": "Split",
-        "merge_title": "Select the PDF files to merge:",
-        "signature": "GaLlaKk",
-        "open_pdf": "Open PDF",
-        "add_folder": "Add folder",
-        "remove_selection": "Remove selection",
-        "move_up": "Move up",
-        "move_down": "Move down",
-        "merge": "Merge",
-        "drop_files_hint": "Drag your PDF files here",
-        "preview_title": "PDF preview",
-        "output_file_label": "Output file:",
-        "choose": "Choose",
-        "split_title": "Select a PDF to split:",
-        "pdf_file_label": "PDF file:",
-        "browse": "Browse",
-        "output_dir_label": "Output folder:",
-        "split_help": "Generated file names will look like: document_1.pdf, document_02.pdf, document_123.pdf according to the total number of pages.",
-        "split_button": "Split",
-        "status_no_pdf": "No PDF selected.",
-        "status_selected_pdf": "Selected PDF: {name}",
-        "status_generated": "{count} files generated in: {path}",
-        "page_label": "Page {current} / {total}",
-        "no_pdf_selected_preview": "No PDF selected\nAdd a file to preview it",
-        "preview_unavailable": "Preview unavailable\n{name}",
-        "preview_not_available": "Preview not available\n{name}",
-        "drop_pdf_only": "Only PDF files can be dropped here.",
-        "pdf_required": "PDF required",
-        "pdf_valid_required": "Please drop a valid PDF file.",
-        "invalid_pdf": "Invalid file",
-        "not_a_pdf": "The selected file is not a PDF.",
-        "select_pdf": "Select the PDF to split",
-        "save_merge": "Save merged PDF",
-        "no_selection": "No selection",
-        "select_a_pdf": "Please select at least one PDF file.",
-        "select_folder_title": "Select a folder containing PDFs",
-        "choose_output_dir": "Choose destination folder",
-        "split_success": "Split successful",
-        "split_success_details": "{count} individual PDF files were created in:\n{path}",
-        "success_merge": "Merge successful",
-        "merge_success_details": "The PDF file was created successfully:\n{path}",
-        "merge_fail": "Merging failed:\n{error}",
-        "split_fail": "Splitting failed:\n{error}",
-        "app_error": "Error",
-        "select_pdf_to_split": "Please select a PDF file to split.",
-        "files_filter": "PDF files",
-        "all_files": "All files",
-        "select_pdf_files": "Select PDF files",
-        "select_pdf_to_merge": "Please select at least one PDF file.",
-        "select_split_pdf": "Please select a PDF file to split.",
-    },
-    "de": {
-        "label": "Deutsch",
-        "app_title": "PDF Manager by GaLlaKk",
-        "language": "Sprache",
-        "merge_tab": "Zusammenführen",
-        "split_tab": "Teilen",
-        "merge_title": "Wählen Sie die zu zusammenführenden PDF-Dateien aus:",
-        "signature": "GaLlaKk",
-        "open_pdf": "PDF öffnen",
-        "add_folder": "Ordner hinzufügen",
-        "remove_selection": "Auswahl entfernen",
-        "move_up": "Nach oben",
-        "move_down": "Nach unten",
-        "merge": "Zusammenführen",
-        "drop_files_hint": "Ziehen Sie Ihre PDF-Dateien hierher",
-        "preview_title": "PDF-Vorschau",
-        "output_file_label": "Ausgabedatei:",
-        "choose": "Auswählen",
-        "split_title": "Wählen Sie eine PDF-Datei zum Teilen aus:",
-        "pdf_file_label": "PDF-Datei:",
-        "browse": "Durchsuchen",
-        "output_dir_label": "Ausgabeordner:",
-        "split_help": "Die Dateinamen sehen so aus: dokument_1.pdf, dokument_02.pdf, dokument_123.pdf entsprechend der Gesamtseitenzahl.",
-        "split_button": "Teilen",
-        "status_no_pdf": "Keine PDF ausgewählt.",
-        "status_selected_pdf": "Ausgewählte PDF: {name}",
-        "status_generated": "{count} Dateien in {path} erstellt",
-        "page_label": "Seite {current} / {total}",
-        "no_pdf_selected_preview": "Keine PDF ausgewählt\nDatei hinzufügen, um Vorschau zu sehen",
-        "preview_unavailable": "Vorschau nicht verfügbar\n{name}",
-        "preview_not_available": "Vorschau nicht verfügbar\n{name}",
-        "drop_pdf_only": "Nur PDF-Dateien können hier abgelegt werden.",
-        "pdf_required": "PDF erforderlich",
-        "pdf_valid_required": "Bitte ziehen Sie eine gültige PDF-Datei herein.",
-        "invalid_pdf": "Ungültige Datei",
-        "not_a_pdf": "Die ausgewählte Datei ist keine PDF.",
-        "select_pdf": "PDF-Datei zum Teilen auswählen",
-        "save_merge": "Zusammengeführte PDF speichern",
-        "no_selection": "Keine Auswahl",
-        "select_a_pdf": "Bitte wählen Sie mindestens eine PDF-Datei aus.",
-        "select_folder_title": "Ordner mit PDFs auswählen",
-        "choose_output_dir": "Zielordner auswählen",
-        "split_success": "Teilen erfolgreich",
-        "split_success_details": "{count} einzelne PDF-Dateien wurden erstellt in:\n{path}",
-        "success_merge": "Zusammenführen erfolgreich",
-        "merge_success_details": "Die PDF-Datei wurde erstellt:\n{path}",
-        "merge_fail": "Zusammenführen fehlgeschlagen:\n{error}",
-        "split_fail": "Teilen fehlgeschlagen:\n{error}",
-        "app_error": "Fehler",
-        "select_pdf_to_split": "Bitte wählen Sie eine PDF-Datei zum Teilen aus.",
-        "files_filter": "PDF-Dateien",
-        "all_files": "Alle Dateien",
-        "select_pdf_files": "PDF-Dateien auswählen",
-        "select_pdf_to_merge": "Bitte wählen Sie mindestens eine PDF-Datei aus.",
-        "select_split_pdf": "Bitte wählen Sie eine PDF-Datei zum Teilen aus.",
-    },
-    "es": {
-        "label": "Español",
-        "app_title": "PDF Manager by GaLlaKk",
-        "language": "Idioma",
-        "merge_tab": "Fusionar",
-        "split_tab": "Dividir",
-        "merge_title": "Seleccione los archivos PDF para fusionar:",
-        "signature": "GaLlaKk",
-        "open_pdf": "Abrir PDF",
-        "add_folder": "Añadir carpeta",
-        "remove_selection": "Quitar selección",
-        "move_up": "Subir",
-        "move_down": "Bajar",
-        "merge": "Fusionar",
-        "drop_files_hint": "Arrastre aquí sus archivos PDF",
-        "preview_title": "Vista previa del PDF",
-        "output_file_label": "Archivo de salida:",
-        "choose": "Elegir",
-        "split_title": "Seleccione un PDF para dividir:",
-        "pdf_file_label": "Archivo PDF:",
-        "browse": "Examinar",
-        "output_dir_label": "Carpeta de salida:",
-        "split_help": "Los nombres generados tendrán este formato: documento_1.pdf, documento_02.pdf, documento_123.pdf según el número total de páginas.",
-        "split_button": "Dividir",
-        "status_no_pdf": "No hay PDF seleccionado.",
-        "status_selected_pdf": "PDF seleccionado: {name}",
-        "status_generated": "{count} archivos generados en: {path}",
-        "page_label": "Página {current} / {total}",
-        "no_pdf_selected_preview": "No hay PDF seleccionado\nAñada un archivo para ver la vista previa",
-        "preview_unavailable": "Vista previa no disponible\n{name}",
-        "preview_not_available": "Vista previa no disponible\n{name}",
-        "drop_pdf_only": "Solo se permiten archivos PDF.",
-        "pdf_required": "Se requiere PDF",
-        "pdf_valid_required": "Por favor, arrastre un archivo PDF válido.",
-        "invalid_pdf": "Archivo no válido",
-        "not_a_pdf": "El archivo seleccionado no es un PDF.",
-        "select_pdf": "Seleccionar PDF para dividir",
-        "save_merge": "Guardar PDF fusionado",
-        "no_selection": "Sin selección",
-        "select_a_pdf": "Seleccione al menos un archivo PDF.",
-        "select_folder_title": "Seleccionar una carpeta que contenga PDFs",
-        "choose_output_dir": "Elegir carpeta de destino",
-        "split_success": "División correcta",
-        "split_success_details": "{count} archivos PDF individuales se crearon en:\n{path}",
-        "success_merge": "Fusión correcta",
-        "merge_success_details": "El archivo PDF se creó correctamente:\n{path}",
-        "merge_fail": "La fusión falló:\n{error}",
-        "split_fail": "La división falló:\n{error}",
-        "app_error": "Error",
-        "select_pdf_to_split": "Seleccione un archivo PDF para dividir.",
-        "files_filter": "Archivos PDF",
-        "all_files": "Todos los archivos",
-        "select_pdf_files": "Seleccionar archivos PDF",
-        "select_pdf_to_merge": "Seleccione al menos un archivo PDF.",
-        "select_split_pdf": "Seleccione un archivo PDF para dividir.",
-    },
-    "pt": {
-        "label": "Português",
-        "app_title": "PDF Manager by GaLlaKk",
-        "language": "Idioma",
-        "merge_tab": "Mesclar",
-        "split_tab": "Dividir",
-        "merge_title": "Selecione os arquivos PDF para mesclar:",
-        "signature": "GaLlaKk",
-        "open_pdf": "Abrir PDF",
-        "add_folder": "Adicionar pasta",
-        "remove_selection": "Remover seleção",
-        "move_up": "Subir",
-        "move_down": "Descer",
-        "merge": "Mesclar",
-        "drop_files_hint": "Arraste seus arquivos PDF aqui",
-        "preview_title": "Pré-visualização do PDF",
-        "output_file_label": "Arquivo de saída:",
-        "choose": "Escolher",
-        "split_title": "Selecione um PDF para dividir:",
-        "pdf_file_label": "Arquivo PDF:",
-        "browse": "Procurar",
-        "output_dir_label": "Pasta de saída:",
-        "split_help": "Os nomes gerados terão este formato: documento_1.pdf, documento_02.pdf, documento_123.pdf de acordo com o número total de páginas.",
-        "split_button": "Dividir",
-        "status_no_pdf": "Nenhum PDF selecionado.",
-        "status_selected_pdf": "PDF selecionado: {name}",
-        "status_generated": "{count} arquivos gerados em: {path}",
-        "page_label": "Página {current} / {total}",
-        "no_pdf_selected_preview": "Nenhum PDF selecionado\nAdicione um arquivo para ver a pré-visualização",
-        "preview_unavailable": "Pré-visualização indisponível\n{name}",
-        "preview_not_available": "Pré-visualização indisponível\n{name}",
-        "drop_pdf_only": "Apenas arquivos PDF podem ser arrastados aqui.",
-        "pdf_required": "PDF necessário",
-        "pdf_valid_required": "Por favor, arraste um PDF válido.",
-        "invalid_pdf": "Arquivo inválido",
-        "not_a_pdf": "O arquivo selecionado não é um PDF.",
-        "select_pdf": "Selecionar PDF para dividir",
-        "save_merge": "Salvar PDF mesclado",
-        "no_selection": "Nenhuma seleção",
-        "select_a_pdf": "Selecione pelo menos um arquivo PDF.",
-        "select_folder_title": "Selecionar uma pasta com PDFs",
-        "choose_output_dir": "Escolher pasta de destino",
-        "split_success": "Divisão concluída",
-        "split_success_details": "{count} arquivos PDF individuais foram criados em:\n{path}",
-        "success_merge": "Mesclagem concluída",
-        "merge_success_details": "O arquivo PDF foi criado com sucesso:\n{path}",
-        "merge_fail": "A mesclagem falhou:\n{error}",
-        "split_fail": "A divisão falhou:\n{error}",
-        "app_error": "Erro",
-        "select_pdf_to_split": "Selecione um arquivo PDF para dividir.",
-        "files_filter": "Arquivos PDF",
-        "all_files": "Todos os arquivos",
-        "select_pdf_files": "Selecionar arquivos PDF",
-        "select_pdf_to_merge": "Selecione pelo menos um arquivo PDF.",
-        "select_split_pdf": "Selecione um arquivo PDF para dividir.",
-    },
-}
+try:
+    from .pdf_manager_translations import LANG_ORDER, TRANSLATIONS
+except ImportError:
+    from pdf_manager_translations import LANG_ORDER, TRANSLATIONS
 
 
 def detect_system_language():
+    """Detect the interface language from the system locale.
+
+    Détermine la langue de l'interface à partir des paramètres régionaux.
+    """
     try:
         default_locale = locale.getdefaultlocale()[0] or ""
     except Exception:
@@ -317,7 +44,16 @@ def detect_system_language():
 
 
 class PdfManagerApp:
+    """Main window for the PDF file management application.
+
+    Fenêtre principale de l'application de gestion des fichiers PDF.
+    """
+
     def __init__(self, root):
+        """Initialize the window, tabs, and interface components.
+
+        Initialise la fenêtre, ses onglets et les composants de l'interface.
+        """
         self.root = root
         self.current_lang = detect_system_language()
         self.translations = TRANSLATIONS
@@ -362,6 +98,10 @@ class PdfManagerApp:
         self.apply_language()
 
     def t(self, key, **kwargs):
+        """Return translated text for the active language, formatted with parameters.
+
+        Renvoie le texte traduit pour la langue active, avec ses paramètres.
+        """
         text = self.translations.get(self.current_lang, self.translations["fr"]).get(key, key)
         try:
             return text.format(**kwargs)
@@ -369,6 +109,10 @@ class PdfManagerApp:
             return text
 
     def on_language_change(self, event=None):
+        """Apply the language selected in the drop-down list.
+
+        Applique la langue choisie dans la liste déroulante.
+        """
         selected_label = self.language_combo.get()
         selected_lang = next((code for code in LANG_ORDER if self.translations[code]["label"] == selected_label), self.current_lang)
         if selected_lang != self.current_lang:
@@ -376,6 +120,10 @@ class PdfManagerApp:
             self.apply_language()
 
     def apply_language(self):
+        """Refresh visible text after a language change.
+
+        Actualise les textes visibles après un changement de langue.
+        """
         self.root.title(self.t("app_title"))
         self.language_label.config(text=self.t("language"))
         self.notebook.tab(0, text=self.t("merge_tab"))
@@ -405,6 +153,10 @@ class PdfManagerApp:
         self.update_preview()
 
     def build_merge_tab(self):
+        """Build the merge tab controls, file list, and preview.
+
+        Crée les commandes, la liste de fichiers et l'aperçu de fusion.
+        """
         self.merge_title_label = tk.Label(
             self.merge_tab,
             text=self.t("merge_title"),
@@ -514,6 +266,10 @@ class PdfManagerApp:
         self.refresh_list()
 
     def build_split_tab(self):
+        """Build the split tab fields and controls.
+
+        Crée les champs et commandes de l'onglet de découpage.
+        """
         self.split_title_label = tk.Label(
             self.split_tab,
             text=self.t("split_title"),
@@ -566,6 +322,10 @@ class PdfManagerApp:
         tk.Label(self.split_tab, textvariable=self.split_status_var, fg="#333333", padx=15, pady=5, anchor="w").pack(fill="x")
 
     def choose_split_source(self):
+        """Open the file picker to select a PDF to split.
+
+        Ouvre le sélecteur pour choisir le PDF à découper.
+        """
         file_path = filedialog.askopenfilename(
             title=self.t("select_pdf"),
             filetypes=[(self.t("files_filter"), "*.pdf"), (self.t("all_files"), "*.*")],
@@ -577,6 +337,10 @@ class PdfManagerApp:
                 self.split_output_dir_var.set(os.path.dirname(file_path))
 
     def on_split_drop(self, event):
+        """Handle a PDF dropped into the source file field.
+
+        Traite le dépôt d'un PDF dans le champ du fichier source.
+        """
         try:
             paths = self.split_source_entry.tk.splitlist(event.data)
         except Exception:
@@ -597,11 +361,19 @@ class PdfManagerApp:
         return ""
 
     def choose_split_output_dir(self):
+        """Open the folder picker for the split output pages.
+
+        Ouvre le sélecteur du dossier où enregistrer les pages.
+        """
         directory = filedialog.askdirectory(title=self.t("choose_output_dir"))
         if directory:
             self.split_output_dir_var.set(directory)
 
     def on_split_output_drop(self, event):
+        """Set the output folder from a dropped path.
+
+        Définit le dossier de sortie à partir d'un chemin déposé.
+        """
         try:
             paths = self.split_output_entry.tk.splitlist(event.data)
         except Exception:
@@ -618,6 +390,10 @@ class PdfManagerApp:
         return ""
 
     def split_selected_pdf(self):
+        """Split the selected PDF and report the result or any error.
+
+        Découpe le PDF sélectionné et affiche le résultat ou l'erreur.
+        """
         pdf_path = self.split_source_var.get().strip()
         if not pdf_path:
             messagebox.showwarning(self.t("no_selection"), self.t("select_pdf_to_split"))
@@ -642,6 +418,10 @@ class PdfManagerApp:
             messagebox.showerror(self.t("app_error"), self.t("split_fail", error=exc))
 
     def select_files(self):
+        """Add PDFs selected in the file picker to the list.
+
+        Ajoute à la liste les PDF choisis dans le sélecteur de fichiers.
+        """
         files = filedialog.askopenfilenames(
             title=self.t("select_pdf_files"),
             filetypes=[(self.t("all_files"), "*.*"), (self.t("files_filter"), "*.pdf")],
@@ -666,6 +446,10 @@ class PdfManagerApp:
         self.file_listbox.selection_clear(0, tk.END)
 
     def select_folder(self):
+        """Add PDFs found in the selected folder to the list.
+
+        Ajoute à la liste les PDF trouvés dans le dossier choisi.
+        """
         folder_path = filedialog.askdirectory(title=self.t("select_folder_title"))
         if not folder_path:
             return
@@ -684,11 +468,19 @@ class PdfManagerApp:
         self.file_listbox.selection_clear(0, tk.END)
 
     def clear_placeholder(self, event=None):
+        """Clear the list placeholder before the first file is selected.
+
+        Efface le texte indicatif de la liste avant la première sélection.
+        """
         if self.selected_files:
             return
         self.file_listbox.delete(0, tk.END)
 
     def on_listbox_select(self, event=None):
+        """Update the active file and preview after a selection.
+
+        Met à jour le fichier actif et son aperçu après une sélection.
+        """
         selected_indexes = self.file_listbox.curselection()
         if selected_indexes:
             self.current_index = selected_indexes[0]
@@ -699,6 +491,10 @@ class PdfManagerApp:
         self.update_preview()
 
     def get_pdf_page_count(self, pdf_path):
+        """Return the PDF page count, or zero if the file is inaccessible.
+
+        Renvoie le nombre de pages du PDF, ou zéro s'il est inaccessible.
+        """
         if not pdf_path or not os.path.isfile(pdf_path):
             return 0
         try:
@@ -708,6 +504,10 @@ class PdfManagerApp:
             return 0
 
     def render_pdf_thumbnail(self, pdf_path, page_number=0):
+        """Render the requested page as a temporary preview image.
+
+        Génère une image temporaire de la page demandée pour l'aperçu.
+        """
         if not pdf_path or not os.path.isfile(pdf_path):
             return None
 
@@ -731,6 +531,10 @@ class PdfManagerApp:
             return None
 
     def next_preview_page(self):
+        """Go to the next page in the active PDF preview.
+
+        Passe à la page suivante dans l'aperçu du PDF actif.
+        """
         if not self.selected_files:
             return
         pdf_path = self.selected_files[self.current_index]
@@ -741,6 +545,10 @@ class PdfManagerApp:
         self.update_preview()
 
     def previous_preview_page(self):
+        """Go to the previous page in the active PDF preview.
+
+        Revient à la page précédente dans l'aperçu du PDF actif.
+        """
         if not self.selected_files:
             return
         if self.preview_page_index <= 0:
@@ -749,6 +557,10 @@ class PdfManagerApp:
         self.update_preview()
 
     def update_preview(self):
+        """Refresh the preview image, page number, and navigation controls.
+
+        Actualise l'image, le numéro de page et les commandes de navigation.
+        """
         if not self.selected_files:
             self.preview_page_index = 0
             self.preview_page_var.set(self.t("page_label", current=1, total=1))
@@ -802,6 +614,10 @@ class PdfManagerApp:
             self.preview_label.image = None
 
     def on_drop(self, event):
+        """Add PDF files dropped into the merge area to the list.
+
+        Ajoute à la liste les fichiers PDF déposés dans la zone de fusion.
+        """
         file_paths = []
         try:
             file_paths = self.file_listbox.tk.splitlist(event.data)
@@ -826,6 +642,10 @@ class PdfManagerApp:
         return ""
 
     def move_up(self):
+        """Move the selected file up by one position.
+
+        Déplace le fichier sélectionné d'une position vers le début.
+        """
         if not self.selected_files or self.current_index <= 0:
             return
         index = self.current_index
@@ -836,6 +656,10 @@ class PdfManagerApp:
         self.refresh_buttons()
 
     def move_down(self):
+        """Move the selected file down by one position.
+
+        Déplace le fichier sélectionné d'une position vers la fin.
+        """
         if not self.selected_files or self.current_index >= len(self.selected_files) - 1:
             return
         index = self.current_index
@@ -846,6 +670,10 @@ class PdfManagerApp:
         self.refresh_buttons()
 
     def remove_selected(self):
+        """Remove the currently selected files from the list.
+
+        Retire de la liste les fichiers actuellement sélectionnés.
+        """
         selected_indexes = list(self.file_listbox.curselection())
         if not selected_indexes:
             return
@@ -854,6 +682,10 @@ class PdfManagerApp:
         self.refresh_list()
 
     def refresh_buttons(self):
+        """Update button states based on file selection and order.
+
+        Actualise l'état des boutons selon la sélection et l'ordre des fichiers.
+        """
         has_files = bool(self.selected_files)
         self.merge_button.config(state=tk.NORMAL if has_files else tk.DISABLED)
         self.remove_button.config(state=tk.NORMAL if has_files else tk.DISABLED)
@@ -868,6 +700,10 @@ class PdfManagerApp:
         self.down_button.config(state=tk.NORMAL if index < len(self.selected_files) - 1 and len(self.selected_files) > 1 else tk.DISABLED)
 
     def refresh_list(self):
+        """Rebuild the displayed list and refresh controls and preview.
+
+        Reconstruit la liste affichée et actualise les commandes et l'aperçu.
+        """
         self.file_listbox.delete(0, tk.END)
         if not self.selected_files:
             self.file_listbox.insert(tk.END, self.t("drop_files_hint"))
@@ -885,6 +721,10 @@ class PdfManagerApp:
         self.update_preview()
 
     def choose_output_file(self):
+        """Open the save dialog for the merged PDF.
+
+        Ouvre le sélecteur du chemin de sortie du PDF fusionné.
+        """
         default_name = "fusion.pdf"
         if self.selected_files:
             default_name = os.path.splitext(os.path.basename(self.selected_files[0]))[0] + "_fusion.pdf"
@@ -900,6 +740,10 @@ class PdfManagerApp:
             self.output_var.set(output_path)
 
     def merge_selected_files(self):
+        """Merge the selected PDFs and report the result or any error.
+
+        Fusionne les PDF sélectionnés et affiche le résultat ou l'erreur.
+        """
         if not self.selected_files:
             messagebox.showwarning(self.t("no_selection"), self.t("select_a_pdf"))
             return

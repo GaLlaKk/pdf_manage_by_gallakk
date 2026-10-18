@@ -1,3 +1,7 @@
+# ============================================================
+# Tests for PDF splitting and generated file naming - GaLlaKk
+# Tests de découpage des PDF et de nommage des fichiers générés - GaLlaKk
+# ============================================================
 import os
 
 from pypdf import PdfWriter
@@ -6,6 +10,10 @@ from pdf_manager.pdf_manager_service import split_pdf_pages
 
 
 def _create_pdf(path, page_count):
+    """Create a test PDF with the requested number of pages.
+
+    Crée un PDF de test contenant le nombre de pages demandé.
+    """
     writer = PdfWriter()
     for _ in range(page_count):
         writer.add_blank_page(width=100, height=200)
@@ -15,6 +23,10 @@ def _create_pdf(path, page_count):
 
 
 def test_split_pdf_pages_names_for_single_digit_count(tmp_path):
+    """Check that page numbers are not zero-padded for PDFs with fewer than ten pages.
+
+    Vérifie que les pages d'un PDF de moins de dix pages ne sont pas complétées par zéro.
+    """
     source = tmp_path / "rapport.pdf"
     _create_pdf(source, 9)
 
@@ -36,6 +48,10 @@ def test_split_pdf_pages_names_for_single_digit_count(tmp_path):
 
 
 def test_split_pdf_pages_names_for_double_digit_count(tmp_path):
+    """Check that page numbers are zero-padded for PDFs with ten or more pages.
+
+    Vérifie que les numéros sont complétés par zéro lorsque le PDF a dix pages ou plus.
+    """
     source = tmp_path / "rapport.pdf"
     _create_pdf(source, 10)
 
