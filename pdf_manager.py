@@ -1,4 +1,4 @@
-﻿﻿# ============================================================
+# ============================================================
 # PDF merging and splitting - GaLlaKk
 # Fusion et division de PDF - GaLlaKk
 # PDF file management application using Tkinter
