@@ -9,8 +9,8 @@ import pymupdf
 import pytest
 from pypdf import PdfWriter
 
-from pdf_manager.pdf_manager_service import compress_pdf, split_pdf_pages
-from pdf_manager.pdf_manager_translations import LANG_ORDER, TRANSLATIONS
+from pdf_manager_service import compress_pdf, split_pdf_pages
+from pdf_manager_translations import LANG_ORDER, TRANSLATIONS
 
 
 def _create_pdf(path, page_count):

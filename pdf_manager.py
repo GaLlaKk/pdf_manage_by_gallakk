@@ -1,4 +1,4 @@
-﻿# ============================================================
+﻿﻿# ============================================================
 # PDF merging and splitting - GaLlaKk
 # Fusion et division de PDF - GaLlaKk
 # PDF file management application using Tkinter
@@ -15,13 +15,13 @@ import pymupdf
 from tkinterdnd2 import DND_FILES, TkinterDnD
 
 try:
-    from .pdf_manager_service import compress_pdf, merge_pdfs, split_pdf_pages
+    from ..pdf_manager_service import compress_pdf, merge_pdfs, split_pdf_pages
 except ImportError:
     from pdf_manager_service import compress_pdf, merge_pdfs, split_pdf_pages
 
 
 try:
-    from .pdf_manager_translations import LANG_ORDER, TRANSLATIONS
+    from ..pdf_manager_translations import LANG_ORDER, TRANSLATIONS
 except ImportError:
     from pdf_manager_translations import LANG_ORDER, TRANSLATIONS
 
