@@ -7,6 +7,7 @@
 
 import locale
 import os
+import threading
 import tempfile
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
@@ -64,6 +65,10 @@ class PdfManagerApp:
         self.selected_files = []
         self.current_index = 0
         self.preview_page_index = 0
+        self._busy = False
+        self._closing = False
+        self.loading_window = None
+        self.root.protocol("WM_DELETE_WINDOW", self.close_application)
 
         self.language_frame = tk.Frame(root, padx=10)
         self.language_frame.pack(fill="x", pady=(8, 0))
@@ -113,6 +118,77 @@ class PdfManagerApp:
             return text.format(**kwargs)
         except Exception:
             return text
+
+    def close_application(self):
+        """Close the application and clean up the current preview image."""
+        self._closing = True
+        if self.preview_temp_path and os.path.exists(self.preview_temp_path):
+            os.remove(self.preview_temp_path)
+        self.root.destroy()
+
+    def run_with_loading(self, action, task, on_success, on_error):
+        """Run a background task while displaying a modal loading window."""
+        if self._busy:
+            return
+
+        self._busy = True
+        window = tk.Toplevel(self.root)
+        self.loading_window = window
+        window.title(self.t("app_title"))
+        window.transient(self.root)
+        window.resizable(False, False)
+        window.protocol("WM_DELETE_WINDOW", lambda: None)
+
+        frame = ttk.Frame(window, padding=20)
+        frame.pack(fill="both", expand=True)
+        ttk.Label(frame, text=self.t("loading_message", action=action)).pack(pady=(0, 12))
+        progress = ttk.Progressbar(frame, mode="indeterminate", length=280)
+        progress.pack(fill="x")
+        progress.start(12)
+
+        window.update_idletasks()
+        x = self.root.winfo_rootx() + (self.root.winfo_width() - window.winfo_width()) // 2
+        y = self.root.winfo_rooty() + (self.root.winfo_height() - window.winfo_height()) // 2
+        window.geometry(f"+{x}+{y}")
+        window.grab_set()
+
+        def finish(result=None, error=None):
+            progress.stop()
+            if window.winfo_exists():
+                if window.grab_current() == window:
+                    window.grab_release()
+                window.destroy()
+            self.loading_window = None
+            self._busy = False
+            if error is not None:
+                on_error(error)
+            else:
+                on_success(result)
+
+        def execute():
+            try:
+                result = task()
+            except Exception as error:
+                if self._closing:
+                    return
+                try:
+                    self.root.after(0, lambda error=error: finish(error=error))
+                except tk.TclError:
+                    return
+            else:
+                if self._closing:
+                    return
+                try:
+                    self.root.after(0, lambda result=result: finish(result=result))
+                except tk.TclError:
+                    return
+
+        self.root.after(100, lambda: threading.Thread(target=execute, daemon=True).start())
+
+    def read_pdf_page_count(self, pdf_path):
+        """Read the page count for a selected PDF."""
+        with pymupdf.open(pdf_path) as document:
+            return document.page_count
 
     def on_language_change(self, event=None):
         """Apply the language selected in the drop-down list.
@@ -438,9 +514,20 @@ class PdfManagerApp:
             filetypes=[(self.t("files_filter"), "*.pdf"), (self.t("all_files"), "*.*")],
         )
         if file_path:
-            self.compress_source_var.set(file_path)
-            base_name, extension = os.path.splitext(file_path)
-            self.compress_output_var.set(f"{base_name}_compressed{extension}")
+            def source_loaded(_page_count):
+                self.compress_source_var.set(file_path)
+                base_name, extension = os.path.splitext(file_path)
+                self.compress_output_var.set(f"{base_name}_compressed{extension}")
+
+            self.run_with_loading(
+                self.t("compress_button"),
+                lambda: self.read_pdf_page_count(file_path),
+                source_loaded,
+                lambda error: messagebox.showerror(
+                    self.t("app_error"),
+                    self.t("compress_fail", error=error),
+                ),
+            )
 
     def choose_compress_output(self):
         """Choose where to save the compressed PDF.
@@ -479,10 +566,14 @@ class PdfManagerApp:
             output_path = f"{base_name}_compressed{extension}"
             self.compress_output_var.set(output_path)
 
-        try:
-            compress_pdf(source_path, output_path, mode=self.compress_mode_var.get())
-            input_size = os.path.getsize(source_path)
-            output_size = os.path.getsize(output_path)
+        mode = self.compress_mode_var.get()
+
+        def compress():
+            compress_pdf(source_path, output_path, mode=mode)
+            return os.path.getsize(source_path), os.path.getsize(output_path)
+
+        def compression_complete(sizes):
+            input_size, output_size = sizes
             messagebox.showinfo(
                 self.t("compress_success"),
                 self.t(
@@ -492,8 +583,16 @@ class PdfManagerApp:
                     path=output_path,
                 ),
             )
-        except Exception as exc:
-            messagebox.showerror(self.t("app_error"), self.t("compress_fail", error=exc))
+
+        self.run_with_loading(
+            self.t("compress_button"),
+            compress,
+            compression_complete,
+            lambda error: messagebox.showerror(
+                self.t("app_error"),
+                self.t("compress_fail", error=error),
+            ),
+        )
 
     def choose_split_source(self):
         """Open the file picker to select a PDF to split.
@@ -505,10 +604,24 @@ class PdfManagerApp:
             filetypes=[(self.t("files_filter"), "*.pdf"), (self.t("all_files"), "*.*")],
         )
         if file_path:
+            self.load_split_source(file_path)
+
+    def load_split_source(self, file_path):
+        def source_loaded(_page_count):
             self.split_source_var.set(file_path)
             self.split_status_var.set(self.t("status_selected_pdf", name=os.path.basename(file_path)))
             if not self.split_output_dir_var.get().strip():
                 self.split_output_dir_var.set(os.path.dirname(file_path))
+
+        self.run_with_loading(
+            self.t("select_pdf"),
+            lambda: self.read_pdf_page_count(file_path),
+            source_loaded,
+            lambda error: messagebox.showerror(
+                self.t("app_error"),
+                self.t("split_fail", error=error),
+            ),
+        )
 
     def on_split_drop(self, event):
         """Handle a PDF dropped into the source file field.
@@ -528,10 +641,7 @@ class PdfManagerApp:
             messagebox.showwarning(self.t("pdf_required"), self.t("pdf_valid_required"))
             return ""
 
-        self.split_source_var.set(dropped_file)
-        self.split_status_var.set(self.t("status_selected_pdf", name=os.path.basename(dropped_file)))
-        if not self.split_output_dir_var.get().strip():
-            self.split_output_dir_var.set(os.path.dirname(dropped_file))
+        self.load_split_source(dropped_file)
         return ""
 
     def choose_split_output_dir(self):
@@ -581,15 +691,25 @@ class PdfManagerApp:
         if not output_dir:
             output_dir = os.path.dirname(pdf_path)
 
-        try:
-            created_files = split_pdf_pages(pdf_path, output_dir=output_dir)
+        def split():
+            return split_pdf_pages(pdf_path, output_dir=output_dir)
+
+        def split_complete(created_files):
             self.split_status_var.set(self.t("status_generated", count=len(created_files), path=output_dir))
             messagebox.showinfo(
                 self.t("split_success"),
                 self.t("split_success_details", count=len(created_files), path=output_dir),
             )
-        except Exception as exc:
-            messagebox.showerror(self.t("app_error"), self.t("split_fail", error=exc))
+
+        self.run_with_loading(
+            self.t("split_button"),
+            split,
+            split_complete,
+            lambda error: messagebox.showerror(
+                self.t("app_error"),
+                self.t("split_fail", error=error),
+            ),
+        )
 
     def select_files(self):
         """Add PDFs selected in the file picker to the list.
@@ -612,12 +732,7 @@ class PdfManagerApp:
             messagebox.showwarning(self.t("no_selection"), self.t("select_a_pdf"))
             return
 
-        for file_path in pdf_files:
-            if file_path not in self.selected_files:
-                self.selected_files.append(file_path)
-
-        self.refresh_list()
-        self.file_listbox.selection_clear(0, tk.END)
+        self.add_pdf_files(pdf_files)
 
     def select_folder(self):
         """Add PDFs found in the selected folder to the list.
@@ -628,12 +743,22 @@ class PdfManagerApp:
         if not folder_path:
             return
 
-        pdf_files = []
-        for file_name in sorted(os.listdir(folder_path)):
-            full_path = os.path.join(folder_path, file_name)
-            if os.path.isfile(full_path) and full_path.lower().endswith(".pdf"):
-                pdf_files.append(full_path)
+        def find_pdfs():
+            return [
+                full_path
+                for file_name in sorted(os.listdir(folder_path))
+                if (full_path := os.path.join(folder_path, file_name)).lower().endswith(".pdf")
+                and os.path.isfile(full_path)
+            ]
 
+        self.run_with_loading(
+            self.t("add_folder"),
+            find_pdfs,
+            self.add_pdf_files,
+            lambda error: messagebox.showerror(self.t("app_error"), str(error)),
+        )
+
+    def add_pdf_files(self, pdf_files):
         for file_path in pdf_files:
             if file_path not in self.selected_files:
                 self.selected_files.append(file_path)
@@ -678,31 +803,80 @@ class PdfManagerApp:
             return 0
 
     def render_pdf_thumbnail(self, pdf_path, page_number=0):
-        """Render the requested page as a temporary preview image.
+        """Render a PDF thumbnail in a worker thread."""
+        with pymupdf.open(pdf_path) as document:
+            page_count = document.page_count
+            if page_count == 0:
+                return page_count, None
+            page_index = max(0, min(int(page_number), page_count - 1))
+            page = document[page_index]
+            pix = page.get_pixmap(matrix=pymupdf.Matrix(1.8, 1.8), alpha=False)
 
-        Génère une image temporaire de la page demandée pour l'aperçu.
-        """
-        if not pdf_path or not os.path.isfile(pdf_path):
-            return None
-
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as temp_file:
+            temp_path = temp_file.name
         try:
-            with pymupdf.open(pdf_path) as doc:
-                if doc.page_count == 0:
-                    return None
-                page_index = max(0, min(int(page_number), doc.page_count - 1))
-                page = doc[page_index]
-                pix = page.get_pixmap(matrix=pymupdf.Matrix(1.8, 1.8), alpha=False)
-
-                if self.preview_temp_path and os.path.exists(self.preview_temp_path):
-                    os.remove(self.preview_temp_path)
-
-                with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as temp_file:
-                    temp_path = temp_file.name
-                pix.save(temp_path)
-                self.preview_temp_path = temp_path
-                return temp_path
+            pix.save(temp_path)
         except Exception:
-            return None
+            os.remove(temp_path)
+            raise
+        return page_count, temp_path
+
+    def set_preview_unavailable(self, pdf_path):
+        self.preview_label.config(
+            text=self.t("preview_unavailable", name=os.path.basename(pdf_path)),
+            image="",
+        )
+        self.preview_label.image = None
+        if self.preview_temp_path and os.path.exists(self.preview_temp_path):
+            os.remove(self.preview_temp_path)
+        self.preview_temp_path = None
+
+    def display_preview(self, result, pdf_path):
+        page_count, preview_path = result
+        if page_count <= 0:
+            self.preview_page_index = 0
+            self.preview_page_var.set(self.t("page_label", current=1, total=1))
+            self.prev_page_button.config(state=tk.DISABLED)
+            self.next_page_button.config(state=tk.DISABLED)
+            self.set_preview_unavailable(pdf_path)
+            return
+
+        if self.preview_page_index >= page_count:
+            self.preview_page_index = page_count - 1
+
+        self.preview_page_var.set(self.t("page_label", current=self.preview_page_index + 1, total=page_count))
+        self.prev_page_button.config(
+            state=tk.NORMAL if page_count > 1 and self.preview_page_index > 0 else tk.DISABLED
+        )
+        self.next_page_button.config(
+            state=tk.NORMAL if page_count > 1 and self.preview_page_index < page_count - 1 else tk.DISABLED
+        )
+
+        if not preview_path:
+            self.set_preview_unavailable(pdf_path)
+            return
+
+        old_preview_path = self.preview_temp_path
+        try:
+            photo = tk.PhotoImage(file=preview_path)
+            max_width = 260
+            max_height = 340
+            width = photo.width()
+            height = photo.height()
+            scale = max(1, int(max(width / max_width, height / max_height)))
+            if scale > 1:
+                photo = photo.subsample(scale)
+            self.preview_label.config(text="", image=photo, compound="center")
+            self.preview_label.image = photo
+            self.preview_temp_path = preview_path
+        except (OSError, tk.TclError):
+            self.set_preview_unavailable(pdf_path)
+            if os.path.exists(preview_path):
+                os.remove(preview_path)
+            self.preview_temp_path = None
+
+        if old_preview_path and os.path.exists(old_preview_path):
+            os.remove(old_preview_path)
 
     def next_preview_page(self):
         """Go to the next page in the active PDF preview.
@@ -711,11 +885,7 @@ class PdfManagerApp:
         """
         if not self.selected_files:
             return
-        pdf_path = self.selected_files[self.current_index]
-        page_count = self.get_pdf_page_count(pdf_path)
-        if page_count <= 1:
-            return
-        self.preview_page_index = min(page_count - 1, self.preview_page_index + 1)
+        self.preview_page_index += 1
         self.update_preview()
 
     def previous_preview_page(self):
@@ -736,6 +906,9 @@ class PdfManagerApp:
         Actualise l'image, le numéro de page et les commandes de navigation.
         """
         if not self.selected_files:
+            if self.preview_temp_path and os.path.exists(self.preview_temp_path):
+                os.remove(self.preview_temp_path)
+            self.preview_temp_path = None
             self.preview_page_index = 0
             self.preview_page_var.set(self.t("page_label", current=1, total=1))
             self.prev_page_button.config(state=tk.DISABLED)
@@ -748,44 +921,16 @@ class PdfManagerApp:
             self.current_index = len(self.selected_files) - 1
 
         current_path = self.selected_files[self.current_index]
-        page_count = self.get_pdf_page_count(current_path)
-        if page_count <= 0:
-            self.preview_page_index = 0
-            self.preview_page_var.set(self.t("page_label", current=1, total=1))
-            self.prev_page_button.config(state=tk.DISABLED)
-            self.next_page_button.config(state=tk.DISABLED)
-            self.preview_label.config(text=self.t("preview_unavailable", name=os.path.basename(current_path)), image="")
-            self.preview_label.image = None
-            return
+        page_index = self.preview_page_index
+        self.preview_label.config(text=self.t("loading_message", action=self.t("preview_title")), image="")
+        self.preview_label.image = None
 
-        if self.preview_page_index >= page_count:
-            self.preview_page_index = page_count - 1
-
-        self.preview_page_var.set(self.t("page_label", current=self.preview_page_index + 1, total=page_count))
-        self.prev_page_button.config(state=tk.NORMAL if page_count > 1 and self.preview_page_index > 0 else tk.DISABLED)
-        self.next_page_button.config(state=tk.NORMAL if page_count > 1 and self.preview_page_index < page_count - 1 else tk.DISABLED)
-
-        preview_path = self.render_pdf_thumbnail(current_path, self.preview_page_index)
-
-        if not preview_path:
-            self.preview_label.config(text=self.t("preview_unavailable", name=os.path.basename(current_path)), image="")
-            self.preview_label.image = None
-            return
-
-        try:
-            photo = tk.PhotoImage(file=preview_path)
-            max_width = 260
-            max_height = 340
-            width = photo.width()
-            height = photo.height()
-            scale = max(1, int(max(width / max_width, height / max_height)))
-            if scale > 1:
-                photo = photo.subsample(scale)
-            self.preview_label.config(text="", image=photo, compound="center")
-            self.preview_label.image = photo
-        except Exception:
-            self.preview_label.config(text=self.t("preview_not_available", name=os.path.basename(current_path)), image="")
-            self.preview_label.image = None
+        self.run_with_loading(
+            self.t("preview_title"),
+            lambda: self.render_pdf_thumbnail(current_path, page_index),
+            lambda result: self.display_preview(result, current_path),
+            lambda _error: self.set_preview_unavailable(current_path),
+        )
 
     def on_drop(self, event):
         """Add PDF files dropped into the merge area to the list.
@@ -932,14 +1077,26 @@ class PdfManagerApp:
         if not output_path.lower().endswith(".pdf"):
             output_path += ".pdf"
 
-        try:
-            merge_pdfs(self.selected_files, output_path)
+        pdf_files = list(self.selected_files)
+
+        def merge():
+            merge_pdfs(pdf_files, output_path)
+
+        def merge_complete(_result):
             messagebox.showinfo(
                 self.t("success_merge"),
                 self.t("merge_success_details", path=output_path),
             )
-        except Exception as exc:
-            messagebox.showerror(self.t("app_error"), self.t("merge_fail", error=exc))
+
+        self.run_with_loading(
+            self.t("merge"),
+            merge,
+            merge_complete,
+            lambda error: messagebox.showerror(
+                self.t("app_error"),
+                self.t("merge_fail", error=error),
+            ),
+        )
 
 
 if __name__ == "__main__":

@@ -8,6 +8,7 @@ TRANSLATIONS = {
     "fr": {
         "label": "Français",
         "app_title": "PDF Manager by GaLlaKk",
+        "loading_message": "Chargement de {action}...",
         "language": "Langue",
         "merge_tab": "Fusionner",
         "split_tab": "Diviser",
@@ -79,6 +80,7 @@ TRANSLATIONS = {
     "en": {
         "label": "English",
         "app_title": "PDF Manager by GaLlaKk",
+        "loading_message": "Loading {action}...",
         "language": "Language",
         "merge_tab": "Merge",
         "split_tab": "Split",
@@ -150,6 +152,7 @@ TRANSLATIONS = {
     "de": {
         "label": "Deutsch",
         "app_title": "PDF Manager by GaLlaKk",
+        "loading_message": "{action} wird geladen...",
         "language": "Sprache",
         "merge_tab": "Zusammenführen",
         "split_tab": "Teilen",
@@ -221,6 +224,7 @@ TRANSLATIONS = {
     "es": {
         "label": "Español",
         "app_title": "PDF Manager by GaLlaKk",
+        "loading_message": "Cargando {action}...",
         "language": "Idioma",
         "merge_tab": "Fusionar",
         "split_tab": "Dividir",
@@ -292,6 +296,7 @@ TRANSLATIONS = {
     "pt": {
         "label": "Português",
         "app_title": "PDF Manager by GaLlaKk",
+        "loading_message": "Carregando {action}...",
         "language": "Idioma",
         "merge_tab": "Mesclar",
         "split_tab": "Dividir",
@@ -363,6 +368,7 @@ TRANSLATIONS = {
     "zh": {
         "label": "中文（简体）",
         "app_title": "PDF Manager by GaLlaKk",
+        "loading_message": "正在加载：{action}...",
         "language": "语言",
         "merge_tab": "合并",
         "split_tab": "拆分",
@@ -434,6 +440,7 @@ TRANSLATIONS = {
     "ja": {
         "label": "日本語",
         "app_title": "PDF Manager by GaLlaKk",
+        "loading_message": "{action}を読み込み中...",
         "language": "言語",
         "merge_tab": "結合",
         "split_tab": "分割",
@@ -505,6 +512,7 @@ TRANSLATIONS = {
     "ru": {
         "label": "Русский",
         "app_title": "PDF Manager by GaLlaKk",
+        "loading_message": "Загрузка: {action}...",
         "language": "Язык",
         "merge_tab": "Объединить",
         "split_tab": "Разделить",
@@ -576,6 +584,7 @@ TRANSLATIONS = {
     "ar": {
         "label": "العربية",
         "app_title": "PDF Manager by GaLlaKk",
+        "loading_message": "جارٍ تحميل {action}...",
         "language": "اللغة",
         "merge_tab": "دمج",
         "split_tab": "تقسيم",
@@ -647,6 +656,7 @@ TRANSLATIONS = {
     "ko": {
         "label": "한국어",
         "app_title": "PDF Manager by GaLlaKk",
+        "loading_message": "{action} 불러오는 중...",
         "language": "언어",
         "merge_tab": "병합",
         "split_tab": "분할",
@@ -718,6 +728,7 @@ TRANSLATIONS = {
     "hi": {
         "label": "हिन्दी",
         "app_title": "PDF Manager by GaLlaKk",
+        "loading_message": "{action} लोड हो रहा है...",
         "language": "भाषा",
         "merge_tab": "जोड़ें",
         "split_tab": "विभाजित करें",
