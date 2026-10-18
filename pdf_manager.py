@@ -7,12 +7,14 @@
 
 import locale
 import os
+import sys
 import threading
 import tempfile
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 
 import pymupdf
+from PIL import Image, ImageTk
 from tkinterdnd2 import DND_FILES, TkinterDnD
 
 try:
@@ -44,6 +46,12 @@ def detect_system_language():
     return short_code if short_code in TRANSLATIONS else "fr"
 
 
+def resource_path(filename):
+    """Return a path to a bundled resource or a source-tree asset."""
+    bundle_dir = getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(bundle_dir, filename)
+
+
 class PdfManagerApp:
     """Main window for the PDF file management application.
 
@@ -56,11 +64,28 @@ class PdfManagerApp:
         Initialise la fenêtre, ses onglets et les composants de l'interface.
         """
         self.root = root
+        self._windows_icon_handles = []
+        self.icon_path = resource_path("PDFManager.ico")
+        if not os.path.isfile(self.icon_path):
+            self.icon_path = resource_path("pdf_manager_logo_256x256.ico")
+        with Image.open(self.icon_path) as icon:
+            largest_frame = max(
+                range(getattr(icon, "n_frames", 1)),
+                key=lambda frame: self.icon_frame_area(icon, frame),
+            )
+            icon.seek(largest_frame)
+            self.app_icon = ImageTk.PhotoImage(icon.convert("RGBA"))
+        self.root.iconphoto(True, self.app_icon)
+        if os.name == "nt":
+            self.root.iconbitmap(self.icon_path)
+            self.root.iconbitmap(default=self.icon_path)
         self.current_lang = detect_system_language()
         self.translations = TRANSLATIONS
         self.root.title(self.t("app_title"))
         self.root.geometry("1030x560")
         self.root.minsize(860, 430)
+        if os.name == "nt":
+            self._set_windows_icon(self.root)
 
         self.selected_files = []
         self.page_rotations = {}
@@ -109,6 +134,52 @@ class PdfManagerApp:
         self.build_compress_tab()
         self.apply_language()
 
+    @staticmethod
+    def icon_frame_area(icon, frame):
+        icon.seek(frame)
+        return icon.width * icon.height
+
+    def _set_windows_icon(self, window):
+        import ctypes
+
+        user32 = ctypes.WinDLL("user32", use_last_error=True)
+        load_image = user32.LoadImageW
+        load_image.argtypes = [
+            ctypes.c_void_p,
+            ctypes.c_wchar_p,
+            ctypes.c_uint,
+            ctypes.c_int,
+            ctypes.c_int,
+            ctypes.c_uint,
+        ]
+        load_image.restype = ctypes.c_void_p
+
+        if not self._windows_icon_handles:
+            icons = [
+                load_image(None, self.icon_path, 1, size, size, 0x0010)
+                for size in (16, 32)
+            ]
+            if not all(icons):
+                destroy_icon = user32.DestroyIcon
+                destroy_icon.argtypes = [ctypes.c_void_p]
+                for icon in icons:
+                    if icon:
+                        destroy_icon(icon)
+                raise ctypes.WinError(ctypes.get_last_error())
+            self._windows_icon_handles.extend(icons)
+        icons = self._windows_icon_handles
+        send_message = user32.SendMessageW
+        send_message.argtypes = [
+            ctypes.c_void_p,
+            ctypes.c_uint,
+            ctypes.c_size_t,
+            ctypes.c_void_p,
+        ]
+        send_message.restype = ctypes.c_ssize_t
+        handle = window.winfo_id()
+        for icon_type, icon in ((0, icons[0]), (1, icons[1]), (2, icons[0])):
+            send_message(handle, 0x0080, icon_type, icon)
+
     def t(self, key, **kwargs):
         """Return translated text for the active language, formatted with parameters.
 
@@ -135,6 +206,9 @@ class PdfManagerApp:
         self._busy = True
         window = tk.Toplevel(self.root)
         self.loading_window = window
+        window.iconphoto(True, self.app_icon)
+        if os.name == "nt":
+            window.iconbitmap(self.icon_path)
         window.title(self.t("app_title"))
         window.transient(self.root)
         window.resizable(False, False)
@@ -151,6 +225,8 @@ class PdfManagerApp:
         x = self.root.winfo_rootx() + (self.root.winfo_width() - window.winfo_width()) // 2
         y = self.root.winfo_rooty() + (self.root.winfo_height() - window.winfo_height()) // 2
         window.geometry(f"+{x}+{y}")
+        if os.name == "nt":
+            self._set_windows_icon(window)
         window.grab_set()
 
         def finish(result=None, error=None):
@@ -1202,6 +1278,10 @@ class PdfManagerApp:
 
 
 if __name__ == "__main__":
+    if os.name == "nt":
+        import ctypes
+
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("GaLlaKk.PDFManager")
     root = TkinterDnD.Tk()
     app = PdfManagerApp(root)
     root.mainloop()

@@ -5,3 +5,4 @@ build/
 dist/
 artifacts/
 *.spec
+.build_icons/

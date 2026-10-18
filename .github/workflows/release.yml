@@ -39,7 +39,7 @@ jobs:
         run: python -m pytest -q test_pdf_manager_service.py
 
       - name: Build standalone application
-        run: python -m PyInstaller --noconfirm --clean --onefile --windowed --name PDFManager --collect-all tkinterdnd2 --collect-all pymupdf pdf_manager.py
+        run: python scripts/build_application.py
 
       - name: Package application
         run: python scripts/package_release.py --platform "${{ matrix.platform }}" --architecture "${{ runner.arch }}"

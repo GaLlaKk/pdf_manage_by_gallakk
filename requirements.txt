@@ -1,3 +1,4 @@
 ﻿pypdf
 PyMuPDF
 tkinterdnd2
+Pillow>=10
