@@ -2,6 +2,12 @@
 
 A Python desktop application for merging, splitting, compressing, rotating, and reordering PDF pages.
 
+PDF Manager runs locally: you can manage your PDFs without uploading or sharing private documents with an online service.
+
+## Read this in another language
+
+[English](README.md) · [Français](README.fr.md) · [Deutsch](README.de.md) · [Español](README.es.md) · [Português](README.pt.md) · [中文](README.zh.md) · [日本語](README.ja.md) · [Русский](README.ru.md) · [العربية](README.ar.md) · [한국어](README.ko.md) · [हिन्दी](README.hi.md)
+
 ## Features
 
 - Merge multiple PDFs into one document.
