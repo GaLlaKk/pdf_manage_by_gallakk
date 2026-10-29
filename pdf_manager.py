@@ -33,7 +33,7 @@ def detect_system_language():
     Détermine la langue de l'interface à partir des paramètres régionaux.
     """
     try:
-        default_locale = locale.getdefaultlocale()[0] or ""
+        default_locale = locale.getlocale()[0] or ""
     except Exception:
         default_locale = ""
 
