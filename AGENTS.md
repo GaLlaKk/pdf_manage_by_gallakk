@@ -17,7 +17,7 @@ PDF Manager by GaLlaKk est une application de bureau Python/Tkinter qui traite l
 - `pdf_manager_version.py` est la source unique de la version affichée.
 - `assets/icons/` contient les icônes sources. `scripts/build_application.py` les prépare et construit l'application autonome ; `scripts/package_release.py` archive le résultat.
 - `tests/` couvre le service PDF, les traductions et quelques comportements de l'application.
-- `.github/workflows/release.yml` lance les tests et construit les packages Windows, Linux et macOS ; un tag `v*` déclenche aussi la publication d'une release.
+- `.github/workflows/ci.yml` lance les tests (PR, `main`, appel depuis le CD). `.github/workflows/cd.yml` s'exécute sur un tag `v*` : vérifie que le tag est sur `main`, lance le CI, construit les packages Windows, Linux et macOS, puis publie la release avec `SHA256SUMS.txt`.
 
 ## Repères de maintenance
 
