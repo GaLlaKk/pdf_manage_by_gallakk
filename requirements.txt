@@ -1,4 +1,4 @@
-pypdf[crypto]
-PyMuPDF
-tkinterdnd2
-Pillow>=10
+pypdf[crypto]>=7,<8
+PyMuPDF>=2.1,<3
+tkinterdnd2>=0.7,<0.8
+Pillow>=13,<14
