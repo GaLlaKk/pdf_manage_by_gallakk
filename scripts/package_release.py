@@ -1,8 +1,14 @@
 import argparse
 import platform
 import subprocess
+import sys
 import zipfile
 from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT))
+
+from pdf_manager_version import __version__  # noqa: E402
 
 
 def archive_executable(executable, archive_path, arcname):
@@ -22,7 +28,7 @@ def main():
 
     args.output.mkdir(parents=True, exist_ok=True)
     architecture = args.architecture.lower().replace("amd64", "x64").replace("x86_64", "x64")
-    archive_path = args.output / f"PDFManager-{args.platform}-{architecture}.zip"
+    archive_path = args.output / f"PDFManager-{__version__}-{args.platform}-{architecture}.zip"
 
     if args.platform == "macos":
         app_bundle = args.dist / "PDFManager.app"

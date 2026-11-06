@@ -26,6 +26,14 @@ jobs:
             exit 1
           fi
 
+      - name: Ensure tag matches application version
+        run: |
+          version="$(python3 -c 'from pdf_manager_version import __version__; print(__version__)')"
+          if [ "$GITHUB_REF_NAME" != "v$version" ]; then
+            echo "::error::Le tag $GITHUB_REF_NAME ne correspond pas à la version $version de pdf_manager_version.py."
+            exit 1
+          fi
+
   test:
     name: Run tests
     needs: verify
