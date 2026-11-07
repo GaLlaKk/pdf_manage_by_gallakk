@@ -24,7 +24,7 @@ No macOS, a primeira execução poderá exigir autorização em **Definições d
 
 ## Versionamento e lançamentos
 
-`pdf_manager_version.py` é a única fonte da versão apresentada pela aplicação. Para publicar uma versão, atualize `__version__` nesse ficheiro e crie e envie uma etiqueta Git correspondente com o prefixo `v`. Por exemplo, para a versão `1.0.0`:
+A versão apresentada pela aplicação vem da etiqueta Git com o prefixo `v`; não há nenhum ficheiro de versão para atualizar manualmente. Para publicar uma versão, crie e envie a etiqueta. Por exemplo, para a versão `1.0.0`:
 
 ```bash
 git tag v1.0.0
@@ -35,7 +35,7 @@ O mesmo workflow pode ser iniciado manualmente no separador **Actions** do repos
 
 ## Executar a partir do código-fonte
 
-Instale o Python 3.10 ou posterior e as dependências da aplicação e, em seguida, inicie-a:
+Instale o Python 3.11 ou posterior e as dependências da aplicação e, em seguida, inicie-a:
 
 ```bash
 python -m pip install -r requirements.txt
@@ -56,4 +56,3 @@ python -m pytest -q
 - `assets/icons/`: ficheiros-fonte dos ícones da aplicação.
 - `scripts/`: scripts autónomos para compilação e criação de pacotes de lançamento.
 - `tests/`: testes da aplicação e do serviço PDF.
-- `pdf_manager_version.py`: versão apresentada pela aplicação.

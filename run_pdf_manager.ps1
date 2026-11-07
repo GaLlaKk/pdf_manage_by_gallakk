@@ -19,15 +19,15 @@ if (Test-Path $venvPython) {
 } elseif (Get-Command python -ErrorAction SilentlyContinue) {
     $pythonExe = (Get-Command python).Source
 } else {
-    Write-Host "Python 3.10 ou supérieur est introuvable." -ForegroundColor Yellow
+    Write-Host "Python 3.11 ou supérieur est introuvable." -ForegroundColor Yellow
     Write-Host "Installez Python, puis relancez ce script." -ForegroundColor Yellow
     Read-Host "Appuyez sur Entrée pour quitter"
     exit 1
 }
 
-& $pythonExe @pythonArgs -c "import sys; raise SystemExit(sys.version_info < (3, 10))"
+& $pythonExe @pythonArgs -c "import sys; raise SystemExit(sys.version_info < (3, 11))"
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "PDF Manager nécessite Python 3.10 ou supérieur." -ForegroundColor Red
+    Write-Host "PDF Manager nécessite Python 3.11 ou supérieur." -ForegroundColor Red
     Read-Host "Appuyez sur Entrée pour quitter"
     exit $LASTEXITCODE
 }

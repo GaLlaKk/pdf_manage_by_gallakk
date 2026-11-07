@@ -14,7 +14,7 @@ PDF Manager by GaLlaKk est une application de bureau Python/Tkinter qui traite l
   - `preview.py` : aperçu des pages, rotations temporaires et enregistrement d'une copie pivotée.
 - `pdf_manager_service.py` contient les opérations PDF réutilisables par l'interface : `merge_pdfs`, `split_pdf_pages`, `compress_pdf`, `rotate_pdf_pages` et `is_pdf_file`.
 - `pdf_manager_translations.py` contient les chaînes de l'interface. Les traductions doivent garder les mêmes clés et les mêmes paramètres de format dans toutes les langues.
-- `pdf_manager_version.py` est la source unique de la version affichée.
+- `pdf_manager_version.py` déduit la version affichée du tag Git (`_build_version.py`, généré à la construction, sinon `git describe`).
 - `assets/icons/` contient les icônes sources. `scripts/build_application.py` les prépare et construit l'application autonome ; `scripts/package_release.py` archive le résultat.
 - `tests/` couvre le service PDF, les traductions et quelques comportements de l'application.
 - `.github/workflows/ci.yml` lance les tests (PR, `main`, appel depuis le CD). `.github/workflows/cd.yml` s'exécute sur un tag `v*` : vérifie que le tag est sur `main`, lance le CI, construit les packages Windows, Linux et macOS, puis publie la release avec `SHA256SUMS.txt`.
@@ -26,11 +26,11 @@ PDF Manager by GaLlaKk est une application de bureau Python/Tkinter qui traite l
 - La fusion respecte l'ordre de `selected_files` et applique les rotations de prévisualisation transmises à `merge_pdfs`.
 - Les rotations de prévisualisation sont temporaires jusqu'à l'enregistrement d'une copie pivotée ou à la fusion.
 - Lors de l'ajout ou de la modification d'une chaîne d'interface, mettre à jour toutes les langues dans `pdf_manager_translations.py`. Le test de cohérence des traductions vérifie les clés et les champs de format.
-- Mettre à jour `__version__` dans `pdf_manager_version.py` pour une nouvelle version ; les releases utilisent un tag Git correspondant, préfixé par `v`.
+- La version vient du tag Git `v*` : pas de version codée en dur ; `scripts/build_application.py --version <tag>` l'intègre dans l'application.
 
 ## Développement et validation
 
-Python 3.10 ou plus récent est requis. Depuis la racine du dépôt :
+Python 3.11 ou plus récent est requis. Depuis la racine du dépôt :
 
 ```bash
 python -m pip install -r requirements.txt

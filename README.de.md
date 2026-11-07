@@ -24,7 +24,7 @@ Beim ersten Start unter macOS ist möglicherweise eine Freigabe unter **Systemei
 
 ## Versionierung und Releases
 
-`pdf_manager_version.py` ist die einzige Quelle für die in der Anwendung angezeigte Version. Ändern Sie für eine Veröffentlichung dort `__version__` und erstellen und übertragen Sie anschließend einen passenden Git-Tag mit dem Präfix `v`. Beispiel für Version `1.0.0`:
+Die in der Anwendung angezeigte Version wird aus dem Git-Tag mit dem Präfix `v` abgeleitet; es gibt keine Versionsdatei, die manuell gepflegt werden muss. Erstellen und übertragen Sie für eine Veröffentlichung den Tag. Beispiel für Version `1.0.0`:
 
 ```bash
 git tag v1.0.0
@@ -35,7 +35,7 @@ Der gleiche Workflow kann manuell über den Tab **Actions** des Repositorys gest
 
 ## Aus dem Quellcode starten
 
-Installieren Sie Python 3.10 oder höher und die Abhängigkeiten und starten Sie anschließend die Anwendung:
+Installieren Sie Python 3.11 oder höher und die Abhängigkeiten und starten Sie anschließend die Anwendung:
 
 ```bash
 python -m pip install -r requirements.txt
@@ -56,4 +56,3 @@ python -m pytest -q
 - `assets/icons/`: Quelldateien der Anwendungssymbole.
 - `scripts/`: eigenständige Skripte zum Erstellen und Verpacken von Releases.
 - `tests/`: Tests der Anwendung und des PDF-Dienstes.
-- `pdf_manager_version.py`: in der Anwendung angezeigte Version.

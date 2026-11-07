@@ -24,7 +24,7 @@ En macOS, es posible que el primer inicio requiera autorización en **Ajustes de
 
 ## Versiones y publicaciones
 
-`pdf_manager_version.py` es la única fuente de la versión que muestra la aplicación. Para publicar una versión, actualiza allí `__version__` y crea y sube una etiqueta de Git coincidente con el prefijo `v`. Por ejemplo, para la versión `1.0.0`:
+La versión que muestra la aplicación se obtiene de la etiqueta de Git con el prefijo `v`; no hay ningún archivo de versión que actualizar manualmente. Para publicar una versión, crea y sube la etiqueta. Por ejemplo, para la versión `1.0.0`:
 
 ```bash
 git tag v1.0.0
@@ -35,7 +35,7 @@ También puedes iniciar el mismo workflow manualmente desde la pestaña **Action
 
 ## Ejecutar desde el código fuente
 
-Instala Python 3.10 o posterior y las dependencias de la aplicación; después, ejecútala:
+Instala Python 3.11 o posterior y las dependencias de la aplicación; después, ejecútala:
 
 ```bash
 python -m pip install -r requirements.txt
@@ -56,4 +56,3 @@ python -m pytest -q
 - `assets/icons/`: archivos de origen de los iconos de la aplicación.
 - `scripts/`: scripts independientes para compilar y empaquetar publicaciones.
 - `tests/`: pruebas de la aplicación y del servicio PDF.
-- `pdf_manager_version.py`: versión que muestra la aplicación.

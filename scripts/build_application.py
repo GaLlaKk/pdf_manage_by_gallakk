@@ -1,7 +1,9 @@
+import argparse
 import os
 import platform
 import struct
 import subprocess
+import sys
 from pathlib import Path
 
 from PIL import Image
@@ -13,6 +15,11 @@ ICON_ASSET_DIRECTORY = ROOT / "assets" / "icons"
 SOURCE_ICON = ICON_ASSET_DIRECTORY / "pdf_manager_logo_256x256.ico"
 ICON_SIZES = (16, 32, 48, 64, 128, 256)
 ICON_DIRECTORY = ROOT / ".build_icons"
+BUILD_VERSION_FILE = ROOT / "_build_version.py"
+
+sys.path.insert(0, str(ROOT))
+
+from pdf_manager_version import UNKNOWN_VERSION, _git_version, normalize_version  # noqa: E402
 
 
 def largest_icon_frame(icon_path):
@@ -85,7 +92,20 @@ def create_macos_icon():
     return icon_path
 
 
+def write_build_version(version):
+    BUILD_VERSION_FILE.write_text(f"VERSION = {version!r}\n", encoding="utf-8")
+
+
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--version",
+        help="Version to embed, usually the Git tag (default: git describe).",
+    )
+    args = parser.parse_args()
+    version = normalize_version(args.version) if args.version else _git_version()
+    write_build_version(version or UNKNOWN_VERSION)
+
     if not SOURCE_ICON.is_file():
         raise FileNotFoundError(f"Application icon not found: {SOURCE_ICON}")
 

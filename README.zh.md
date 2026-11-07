@@ -24,7 +24,7 @@
 
 ## 版本管理与发布
 
-`pdf_manager_version.py` 是应用显示版本的唯一来源。发布新版本时，请更新该文件中的 `__version__`，然后创建并推送对应的、以 `v` 开头的 Git 标签。例如，发布 `1.0.0`：
+应用显示的版本来自以 `v` 开头的 Git 标签，无需手动维护版本文件。发布时创建并推送标签即可。例如，发布 `1.0.0`：
 
 ```bash
 git tag v1.0.0
@@ -35,7 +35,7 @@ git push origin v1.0.0
 
 ## 从源代码运行
 
-安装 Python 3.10 或更高版本及应用依赖，然后启动应用：
+安装 Python 3.11 或更高版本及应用依赖，然后启动应用：
 
 ```bash
 python -m pip install -r requirements.txt
@@ -56,4 +56,3 @@ python -m pytest -q
 - `assets/icons/`：应用图标源文件。
 - `scripts/`：独立的构建和发布打包脚本。
 - `tests/`：应用和 PDF 服务测试。
-- `pdf_manager_version.py`：应用显示的版本。
