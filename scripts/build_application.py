@@ -16,6 +16,18 @@ SOURCE_ICON = ICON_ASSET_DIRECTORY / "pdf_manager_logo_256x256.ico"
 ICON_SIZES = (16, 32, 48, 64, 128, 256)
 ICON_DIRECTORY = ROOT / ".build_icons"
 BUILD_VERSION_FILE = ROOT / "_build_version.py"
+# Optional PyMuPDF extras (ONNX layout models, LLM export) are never used.
+EXCLUDED_MODULES = (
+    "pymupdf.layout",
+    "pymupdf4llm",
+    "pymupdf_layout",
+    "onnxruntime",
+    "numpy",
+    "pytest",
+    "unittest",
+    "pydoc",
+    "tkinter.test",
+)
 
 sys.path.insert(0, str(ROOT))
 
@@ -132,13 +144,15 @@ def main():
         f"{SOURCE_ICON}{os.pathsep}assets/icons",
         "--collect-all",
         "tkinterdnd2",
-        "--collect-all",
+        "--collect-binaries",
         "pymupdf",
-        "--collect-all",
+        "--collect-submodules",
         "PIL",
-        "--collect-all",
+        "--collect-binaries",
         "cryptography",
     ]
+    for module in EXCLUDED_MODULES:
+        arguments.extend(["--exclude-module", module])
     if platform.system() == "Windows":
         arguments.extend(
             ["--add-data", f"{build_icon}{os.pathsep}PDFManager.ico"]
