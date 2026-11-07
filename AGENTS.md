@@ -16,6 +16,7 @@ PDF Manager by GaLlaKk est une application de bureau Python/Tkinter qui traite l
 - `pdf_manager_translations.py` contient les chaînes de l'interface. Les traductions doivent garder les mêmes clés et les mêmes paramètres de format dans toutes les langues.
 - `pdf_manager_version.py` déduit la version affichée du tag Git (`_build_version.py`, généré à la construction, sinon `git describe`).
 - `assets/icons/` contient les icônes sources. `scripts/build_application.py` les prépare et construit l'application autonome ; `scripts/package_release.py` archive le résultat.
+- `scripts/export_android_strings.py` exporte les traductions en `strings.xml` Android vers `docs/android-handoff/res/` ; `docs/android-handoff/` contient la spécification et le modèle `AGENTS.md` du futur dépôt Android natif. Régénérer `res/` après toute modification des traductions.
 - `tests/` couvre le service PDF, les traductions et quelques comportements de l'application.
 - `.github/workflows/ci.yml` lance les tests (PR, `main`, appel depuis le CD). `.github/workflows/cd.yml` s'exécute sur un tag `v*` : vérifie que le tag est sur `main`, lance le CI, construit les packages Windows, Linux et macOS, puis publie la release avec `SHA256SUMS.txt`.
 
