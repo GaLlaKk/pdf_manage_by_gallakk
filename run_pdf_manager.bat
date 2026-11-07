@@ -27,12 +27,12 @@ if exist "%VENV_PYTHON%" (
 )
 
 if /I "%PYTHON_EXE%"=="py -3" (
-    py -3 -c "import sys; raise SystemExit(sys.version_info < (3, 10))"
+    py -3 -c "import sys; raise SystemExit(sys.version_info < (3, 11))"
 ) else (
-    "%PYTHON_EXE%" -c "import sys; raise SystemExit(sys.version_info < (3, 10))"
+    "%PYTHON_EXE%" -c "import sys; raise SystemExit(sys.version_info < (3, 11))"
 )
 if errorlevel 1 (
-    echo PDF Manager requires Python 3.10 or newer.
+    echo PDF Manager requires Python 3.11 or newer.
     pause
     exit /b 1
 )

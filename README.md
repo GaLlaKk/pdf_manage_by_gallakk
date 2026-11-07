@@ -26,7 +26,7 @@ On macOS, the first launch may require approval in **System Settings → Privacy
 
 ## Versioning and releases
 
-`pdf_manager_version.py` is the single source of the application's displayed version. Update `__version__` there for a release, then create and push a matching `v`-prefixed Git tag. For example, for version `1.0.0`:
+The application's displayed version comes from the `v`-prefixed Git tag; there is no version file to update by hand. To release, create and push the tag. For example, for version `1.0.0`:
 
 ```bash
 git tag v1.0.0
@@ -37,7 +37,7 @@ The same workflow can be started manually from the repository's **Actions** tab;
 
 ## Running from source
 
-Install Python 3.10 or higher and the application dependencies, then launch the app:
+Install Python 3.11 or higher and the application dependencies, then launch the app:
 
 ```bash
 python -m pip install -r requirements.txt
@@ -58,4 +58,3 @@ python -m pytest -q
 - `assets/icons/`: application icon source files.
 - `scripts/`: standalone build and release packaging scripts.
 - `tests/`: application and PDF-service tests.
-- `pdf_manager_version.py`: displayed application version.

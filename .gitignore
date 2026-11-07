@@ -6,3 +6,4 @@ dist/
 artifacts/
 *.spec
 .build_icons/
+_build_version.py
